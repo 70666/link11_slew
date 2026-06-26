@@ -1,0 +1,16 @@
+# 默认忽略全部文件, 仅放行 Verilog/SystemVerilog 源码和本排除文件。
+*
+
+# 允许 Git 继续遍历子目录, 否则子目录内的 .v/.sv 无法被发现。
+!*/
+
+# 只上传 Verilog/SystemVerilog 文件。
+!*.v
+!*.sv
+
+
+# 保留本文件, 便于仓库共享同一套排除规则。
+!.gitignore
+
+# 排除工程文件
+/link11_slew_project/**
