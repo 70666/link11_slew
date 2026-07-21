@@ -170,22 +170,16 @@ module viterbi_decoder #(
         end
     endfunction
 
+// 遍历每个状态 算出当前时刻, 每个状态的最优路径
     genvar gen_state;
     generate
-        for (gen_state = 0; gen_state < STATE_NUM; gen_state = gen_state + 1) begin : gen_acs_math
-            localparam integer NEXT_STATE_I = gen_state;
-            localparam integer LOW_MASK_I = (1 << (STATE_BITS - 1)) - 1;
-            localparam integer PREV_STATE_0_I = (NEXT_STATE_I & LOW_MASK_I) << 1;
-            localparam integer PREV_STATE_1_I = PREV_STATE_0_I | 1;
-            localparam [STATE_BITS-1:0] NEXT_STATE = NEXT_STATE_I[STATE_BITS-1:0];
-            localparam [STATE_BITS-1:0] PREV_STATE_0 = PREV_STATE_0_I[STATE_BITS-1:0];
-            localparam [STATE_BITS-1:0] PREV_STATE_1 = PREV_STATE_1_I[STATE_BITS-1:0];
+        for (gen_state = 0; gen_state < STATE_NUM; gen_state = gen_state + 1) begin : gen_acs_math                          
+            localparam [STATE_BITS-1:0] NEXT_STATE = gen_state[STATE_BITS-1:0];                 // 当前状态
+            // 可能的走到当前状态的上个时刻的两个状态, 最低位有可能是1, 有可能是0
+            localparam [STATE_BITS-1:0] PREV_STATE_0 = {NEXT_STATE[STATE_BITS-2:0], 1'b0};      
+            localparam [STATE_BITS-1:0] PREV_STATE_1 = {NEXT_STATE[STATE_BITS-2:0], 1'b1};
 
-            // 对一个固定的当前状态 NEXT_STATE 来说, 它只可能由两个上一拍状态转移而来。
-            // 原因来自卷积编码器移位关系:
-            // 当前状态 = {本拍输入 bit, 上一拍状态的高 STATE_BITS-1 位}
-            // 所以上一拍状态的最低位已经被移出, 它可能是 0, 也可能是 1。
-            // 这两个可能的上一拍状态就是 PREV_STATE_0 和 PREV_STATE_1。
+            // 前面提到的上一时刻两个状态, 走到当前时刻的这个状态, 分别需要多少汉明距离
             assign branch_metric_0[gen_state] =
                 hamming2(branch_bits(PREV_STATE_0, NEXT_STATE[STATE_BITS-1]), rx_bits);
             assign branch_metric_1[gen_state] =

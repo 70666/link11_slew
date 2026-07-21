@@ -4,11 +4,9 @@ module link11_slew_simulate (
 // tx param
 localparam SAMPLE_CLK_NUM = 32;
 localparam SYMBOL_SAMPLE_NUM = 32;
+localparam real CARRIER_FREQ_OFFSET_HZ = 15.0;
 localparam AMPLITUDE = 30000;
-localparam HEADER_SYMBOL_NUM = 64;
-localparam DATA_SYMBOL_NUM = 64;
-localparam EOM_SYMBOL_NUM = 64;
-localparam DATA_BLOCK_NUM = 1;
+localparam DATA_BLOCK_NUM = 5;
 // rx param
 localparam DATA_WIDTH = 16;
 localparam WINDOW_NUM = SYMBOL_SAMPLE_NUM;
@@ -35,23 +33,28 @@ end
 
 wire iq_strobe;
 wire [15:0] tx_i, tx_q;
+wire [15:0] tx_zero_if_i, tx_zero_if_q;
+
+wire [1:0] tx_raw_dibit;    
+wire [2:0] tx_raw_phase;
+wire tx_raw_dibit_strobe;       
+wire [7:0] tx_scramble_idx;
+wire [2:0] tx_scramble_sym;
+wire [2:0] tx_symbol_phase;
 
 wire [31:0] envelope_detection = 30000;
 
-localparam [3*HEADER_SYMBOL_NUM-1:0] HEADER_PAYLOAD = {{64{3'o0}}};
-localparam [3*DATA_SYMBOL_NUM-1:0] DATA_PAYLOAD = {{64{3'o0}}};
-localparam [3*EOM_SYMBOL_NUM-1:0] EOM_PAYLOAD = {{64{3'o0}}};
+localparam [32:0] HEADER_RAW_PAYLOAD = 33'b10110_01101_11000_10101_00110_11100_100;
+localparam [DATA_BLOCK_NUM*48-1:0] DATA_RAW_PAYLOAD = {DATA_BLOCK_NUM{48'h1234_5678_9ABC}};
 link11_slew_tx_top_sim #(
     .SAMPLE_CLK_NUM    ( SAMPLE_CLK_NUM    ),
     .SYMBOL_SAMPLE_NUM ( SYMBOL_SAMPLE_NUM ),
+    .CARRIER_FREQ_OFFSET_HZ ( CARRIER_FREQ_OFFSET_HZ ),
     .AMPLITUDE         ( AMPLITUDE         ),
-    .HEADER_SYMBOL_NUM ( HEADER_SYMBOL_NUM ),
-    .DATA_SYMBOL_NUM   ( DATA_SYMBOL_NUM   ),
-    .EOM_SYMBOL_NUM    ( EOM_SYMBOL_NUM    ),
     .DATA_BLOCK_NUM    ( DATA_BLOCK_NUM    ),
-    .HEADER_PAYLOAD    ( HEADER_PAYLOAD    ),
-    .DATA_PAYLOAD      ( DATA_PAYLOAD      ),
-    .EOM_PAYLOAD       ( EOM_PAYLOAD       ))
+    .HEADER_RAW_PAYLOAD ( HEADER_RAW_PAYLOAD ),
+    .DATA_RAW_PAYLOAD   ( DATA_RAW_PAYLOAD   ),
+    .EOF_ALL_ONES       ( 1'b0               ))
  u_link11_slew_tx_top_sim (
     .clk                     ( clk                   ),
     .rst_n                   ( rst_n                 ),
@@ -61,6 +64,14 @@ link11_slew_tx_top_sim #(
     .done                    ( done                  ),
     .iq_strobe               ( iq_strobe             ),
     .symbol_strobe           ( symbol_strobe         ),
+    .tx_raw_dibit            ( tx_raw_dibit         [1:0]  ),
+    .tx_raw_phase            ( tx_raw_phase         [2:0]  ),
+    .tx_raw_dibit_strobe     ( tx_raw_dibit_strobe         ),
+    .tx_scramble_idx         ( tx_scramble_idx      [7:0]  ),
+    .tx_scramble_sym         ( tx_scramble_sym      [2:0]  ),
+    .tx_symbol_phase         ( tx_symbol_phase      [2:0]  ),
+    .tx_zero_if_i            ( tx_zero_if_i        [15:0]  ),
+    .tx_zero_if_q            ( tx_zero_if_q        [15:0]  ),
     .tx_i                    ( tx_i           [15:0] ),
     .tx_q                    ( tx_q           [15:0] )
 );
@@ -76,7 +87,8 @@ link11_slew_demod_top #(
     .signal_if_strobe        ( iq_strobe            ),
     .signal_if_i             ( tx_i                 ),
     .signal_if_q             ( tx_q                 ),
-    .envelope_detection      ( envelope_detection   )
+    .envelope_detection      ( envelope_detection   ),
+    .mixer_mag_thres         ( 65536 * 1000         )
 );
 
 

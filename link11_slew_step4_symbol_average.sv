@@ -58,7 +58,8 @@ assign symbol_average_q = sum_q[SUM_WIDTH-1-:LPF_WIDTH];
 moving_sum #(
     .DATA_WIDTH ( LPF_WIDTH         ),
     .WINDOW_NUM ( AVERAGE_SAMPLE_NUM),
-    .LATENCY    ( 1                 ))
+    .LATENCY    ( 1                 ),
+    .ARITH_IMPL_TYPE ( "LUT" ))
  u_symbol_sum (
     .clk                     ( clk                ),
     .rst_n                   ( rst_n              ),

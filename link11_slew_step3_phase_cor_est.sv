@@ -1,29 +1,31 @@
 module link11_slew_step3_phase_cor_est #(
-    parameter SYMBOL_NUM_TO_EST = 16,       // 要求一定是2的指数
-    parameter PHASE_DIFF_NUM_IN_SYMBOL = 8, // 小于等于WINDOW_NUM的最大2的指数, 确保WINDOW_NUM-1不是2的指数幂的情况下依然可以进行
+    parameter SYMBOL_NUM_TO_EST = 16,       
     parameter WINDOW_NUM = 16,
-    parameter LPF_WIDTH = 16
+    parameter LPF_WIDTH = 16,
+    parameter CORDIC_WIDTH = 18
 )(
     input wire clk,
     input wire rst_n,
     input wire demod_done,
-    input wire signal_valid_start,  // start -> enb -> doutb/strobe 期间至少跨2个时钟
+    input wire signal_valid_start,                                                  // start -> enb -> doutb/strobe 期间至少跨2个时钟
     input wire [LPF_WIDTH-1:0] symbol_aligned_i,
     input wire [LPF_WIDTH-1:0] symbol_aligned_q,
     input wire symbol_aligned_strobe,
-    output reg signed [14:0] phase_cor_est_i,
-    output reg signed [14:0] phase_cor_est_q,
+    output reg signed [CORDIC_WIDTH-2:0] phase_cor_est_i,
+    output reg signed [CORDIC_WIDTH-2:0] phase_cor_est_q,
     output reg phase_cor_est_strobe
 );
 
+localparam SAMPLE_NUM_IN_SYMBOL = WINDOW_NUM - 1;                                   // 相位作差只能是WINDOW_NUM - 1, 确保作差不会跨越symbol
+// 模块延时
 localparam MIXER_LATENCY = 7;
 localparam SAMPLE_ADDER_LATENCY = 2;
 localparam SYMBOL_ADDER_LATENCY = 2;
-
+// 位宽计算
 localparam MIXER_OUT_WIDTH = 2*LPF_WIDTH;
 localparam SAMPLE_CNT_WIDTH = $clog2(WINDOW_NUM) + 1;
 localparam SYMBOL_CNT_WIDTH = $clog2(SYMBOL_NUM_TO_EST) + 1;
-localparam SAMPLE_SUM_WIDTH = MIXER_OUT_WIDTH + $clog2(PHASE_DIFF_NUM_IN_SYMBOL);
+localparam SAMPLE_SUM_WIDTH = MIXER_OUT_WIDTH + $clog2(SAMPLE_NUM_IN_SYMBOL);
 localparam PHASE_COR_WIDTH = SAMPLE_SUM_WIDTH + $clog2(SYMBOL_NUM_TO_EST);
 
 
@@ -63,11 +65,11 @@ always @(posedge clk) begin
         current_sample_q <= symbol_aligned_q;
         last_sample_i <= current_sample_i;
         last_sample_q <= current_sample_q;
-        mixer_in_strobe <= (cnt_samples_in_symbol != 0) &&
-                           (cnt_samples_in_symbol <= PHASE_DIFF_NUM_IN_SYMBOL);
+        mixer_in_strobe <= (cnt_samples_in_symbol != 0) &&                      // 第一个不计入, 因为last_sample还没准备好
+                           (cnt_samples_in_symbol <= SAMPLE_NUM_IN_SYMBOL);     // 一个symbol内共1,2,...,SAMPLE_NUM_IN_SYMBOL参与计算
         if(cnt_samples_in_symbol == WINDOW_NUM - 1) begin
             cnt_samples_in_symbol <= 0;
-            if(cnt_symbols_to_est == SYMBOL_NUM_TO_EST - 1) begin
+            if(cnt_symbols_to_est == SYMBOL_NUM_TO_EST - 1) begin               // 对于究竟要采几个SYMBOL允许有一个误差, 这里可能控制的不完全准确
                 collecting <= 1'b0;
             end else begin
                 collecting <= 1'b1;
@@ -85,7 +87,7 @@ end
 wire mixer_out_strobe;
 wire signed [MIXER_OUT_WIDTH-1:0] phase_diff_i;
 wire signed [MIXER_OUT_WIDTH-1:0] phase_diff_q;
-// MIXER_LATENCY clks, 输出 x[n] * conj(x[n-1]) 得到相邻采样相位差向量. 只有满足条件的才会给strobe
+// x[n] * conj(x[n-1]) 得到相邻采样点相位差向量. 
 mixer_strobe #(
     .A_DATA_WIDTH ( LPF_WIDTH ),
     .B_DATA_WIDTH ( LPF_WIDTH ),
@@ -110,7 +112,7 @@ wire [SAMPLE_CNT_WIDTH-1:0] sample_sum_index;
 wire [SYMBOL_CNT_WIDTH-1:0] phase_diff_symbol_index;
 wire [SYMBOL_CNT_WIDTH-1:0] sample_sum_symbol_index;
 
-// MIXER_LATENCY clks, 对齐混频输出对应的 sample index.
+// 对齐混频输出对应的 sample index.
 delay #(
     .DATA_WIDTH ( SAMPLE_CNT_WIDTH ),
     .DELAY_CLK  ( MIXER_LATENCY    ),
@@ -122,7 +124,7 @@ delay #(
     .data_out   ( phase_diff_index      )
 );
 
-// SAMPLE_ADDER_LATENCY clks, 对齐 symbol 内累加结果对应的 sample index.
+// 对齐 symbol 内累加结果对应的 sample index.
 delay #(
     .DATA_WIDTH ( SAMPLE_CNT_WIDTH     ),
     .DELAY_CLK  ( SAMPLE_ADDER_LATENCY ),
@@ -134,7 +136,7 @@ delay #(
     .data_out   ( sample_sum_index )
 );
 
-// MIXER_LATENCY clks, 对齐混频输出对应的 symbol index.
+// 对齐混频输出对应的 symbol index.
 delay #(
     .DATA_WIDTH ( SYMBOL_CNT_WIDTH ),
     .DELAY_CLK  ( MIXER_LATENCY    ),
@@ -146,7 +148,7 @@ delay #(
     .data_out   ( phase_diff_symbol_index )
 );
 
-// SAMPLE_ADDER_LATENCY clks, 对齐 symbol 内累加结果对应的 symbol index.
+// 对齐 symbol 内累加结果对应的 symbol index.
 delay #(
     .DATA_WIDTH ( SYMBOL_CNT_WIDTH     ),
     .DELAY_CLK  ( SAMPLE_ADDER_LATENCY ),
@@ -197,7 +199,7 @@ always @(posedge clk) begin
     end
 end
 
-// SAMPLE_ADDER_LATENCY clks, 累加一个 symbol 内选中的 PHASE_DIFF_NUM_IN_SYMBOL 个相位差.
+// SAMPLE_ADDER_LATENCY clks, 累加一个 symbol 内选中的 SAMPLE_NUM_IN_SYMBOL 个相位差.
 Adder_strobe #(
     .IMPL_TYPE ( "LUT"            ),
     .A_WIDTH   ( SAMPLE_SUM_WIDTH ),
@@ -265,7 +267,7 @@ always @(posedge clk) begin
         symbol_adder_in_strobe <= 1'b0;
         symbol_adder_in_i <= 0;
         symbol_adder_in_q <= 0;
-    end else if(sample_adder_out_strobe && (sample_sum_index == PHASE_DIFF_NUM_IN_SYMBOL)) begin
+    end else if(sample_adder_out_strobe && (sample_sum_index == SAMPLE_NUM_IN_SYMBOL)) begin
         symbol_adder_in_strobe <= 1'b1;
         symbol_adder_in_i <= sample_adder_out_i;
         symbol_adder_in_q <= sample_adder_out_q;
@@ -287,10 +289,10 @@ always @(posedge clk) begin
     end
 end
 
-// CORDIC位宽16bit, 只有低15bit有效, 最高位补一个符号位
+// 为满足要求, CORDIC最高位为符号位
 normalize #(
     .DATA_WIDTH_IN  ( PHASE_COR_WIDTH  ),
-    .DATA_WIDTH_OUT ( 15 ))
+    .DATA_WIDTH_OUT ( CORDIC_WIDTH-1 ))
  u_normalize (
     .clk                     ( clk                                   ),
     .rst_n                   ( rst_n                                 ),

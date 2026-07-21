@@ -31,7 +31,8 @@ wire sum_out_strobe;
 moving_sum #(
     .DATA_WIDTH ( LPF_WIDTH ),
     .WINDOW_NUM ( WINDOW_NUM ),
-    .LATENCY    ( 1         ))
+    .LATENCY    ( 1         ),
+    .ARITH_IMPL_TYPE ( "LUT" ))
  u_moving_sum (
     .clk                     ( clk                          ),
     .rst_n                   ( rst_n                        ),

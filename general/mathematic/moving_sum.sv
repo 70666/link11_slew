@@ -2,7 +2,8 @@
 module moving_sum#(
     parameter DATA_WIDTH = 16,
     parameter WINDOW_NUM = 16,
-    parameter LATENCY = 1
+    parameter LATENCY = 1,
+    parameter ARITH_IMPL_TYPE = "LUT"
 )(
     input wire clk,
     input wire rst_n,
@@ -39,7 +40,7 @@ end
 
 
 AdderTree #(
-    .IMPL_TYPE  ( "LUT"  ),
+    .IMPL_TYPE  ( ARITH_IMPL_TYPE  ),
     .DATA_WIDTH ( DATA_WIDTH ),
     .DATA_TYPE  ( 1  ),
     .OUT_WIDTH  ( DATA_WIDTH+$clog2(WINDOW_NUM)  ),
@@ -51,7 +52,7 @@ AdderTree #(
 
     .sum_out   ( sum_out_i    )
 );AdderTree #(
-    .IMPL_TYPE  ( "LUT"  ),
+    .IMPL_TYPE  ( ARITH_IMPL_TYPE  ),
     .DATA_WIDTH ( DATA_WIDTH ),
     .DATA_TYPE  ( 1  ),
     .OUT_WIDTH  ( DATA_WIDTH+$clog2(WINDOW_NUM)  ),

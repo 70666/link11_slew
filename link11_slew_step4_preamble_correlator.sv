@@ -1,8 +1,8 @@
 module link11_slew_step4_preamble_correlator #(
     parameter LPF_WIDTH = 16,
-    parameter SYMBOL_NUMS_TO_FIND = 3,
+    parameter SYMBOL_NUMS_TO_FIND = 3,          // 自相关窗口
     // 互相关已知序列的最后一个symbol对应索引
-    parameter KNOWN_SEQUENCE_END_SYMBOL = 5,    // 从1开始计数
+    parameter FIND_SERIES_START_INDEX = 5,      // 0 1 2 3 4 |5 ... 4+SYMBOL_NUMS_TO_FIND| 6 ... 191 192
     parameter PREAMBLE_SYMBOL_NUM = 192         // 找前导码的symbol数
 ) (
     input wire clk,
@@ -33,9 +33,9 @@ genvar index;
 generate
     for(index=0;index<SYMBOL_NUMS_TO_FIND;index=index+1) begin
         assign preamble_known_i[index] = 
-        LINK11_SLEW_PREAMBLE_I[index+KNOWN_SEQUENCE_END_SYMBOL-SYMBOL_NUMS_TO_FIND][15-:LPF_WIDTH];
+        LINK11_SLEW_PREAMBLE_I[index+FIND_SERIES_START_INDEX][15-:LPF_WIDTH];
         assign preamble_known_q[index] = 
-        LINK11_SLEW_PREAMBLE_Q[index+KNOWN_SEQUENCE_END_SYMBOL-SYMBOL_NUMS_TO_FIND][15-:LPF_WIDTH];
+        LINK11_SLEW_PREAMBLE_Q[index+FIND_SERIES_START_INDEX][15-:LPF_WIDTH];
     end
 endgenerate
 
@@ -67,8 +67,7 @@ wire candidate_strobe;
 // 第3个symbol开始, 每个平均值产生一个连续三symbol相关结果.
 assign candidate_strobe =
     symbol_average_strobe &&
-    (received_symbol_num >= SYMBOL_NUMS_TO_FIND - 1) &&
-    (received_symbol_num < PREAMBLE_SYMBOL_NUM);
+    (received_symbol_num >= SYMBOL_NUMS_TO_FIND - 1);
 
 always @(posedge clk) begin
     if(!rst_n) begin

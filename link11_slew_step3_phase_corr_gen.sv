@@ -1,32 +1,36 @@
 module link11_slew_step3_phase_corr_gen#(
-    parameter LPF_WIDTH = 16
+    parameter LPF_WIDTH = 16,
+    parameter CORDIC_WIDTH = 18
 )(
     input wire clk,
     input wire rst_n,
     input wire demod_done,
     input wire phase_cor_est_strobe,
-    input wire [14:0] phase_cor_est_i, phase_cor_est_q,
+    input wire [CORDIC_WIDTH-2:0] phase_cor_est_i, phase_cor_est_q,
     input wire symbol_aligned_strobe,
     input wire [LPF_WIDTH-1:0] symbol_aligned_i, symbol_aligned_q,
-    output wire [15:0] phase_corr_i, phase_corr_q,
+    output wire [15:0] phase_corr_dds_i, phase_corr_dds_q,
     output reg correcting = 0   // DDS生成信号是否有效的标识, 允许读ram
 );
 
 localparam DDS_LATENCY_STROBE = 7;
 
+localparam CORDIC_WIDTH_REAL = (CORDIC_WIDTH % 8 == 0)? CORDIC_WIDTH : (CORDIC_WIDTH / 8 + 1) * 8;
 localparam MIXER_WIDTH = LPF_WIDTH + 16;
 
-wire [31:0] cordic_cartesian_tdata;
+wire [2*CORDIC_WIDTH_REAL-1:0] cordic_cartesian_tdata;
 wire cordic_cartesian_tvalid;
-assign cordic_cartesian_tdata = {phase_cor_est_q[14], phase_cor_est_q, phase_cor_est_i[14], phase_cor_est_i};
+assign cordic_cartesian_tdata[CORDIC_WIDTH_REAL-1:0]                    = { {(CORDIC_WIDTH_REAL-CORDIC_WIDTH){1'b0}}, phase_cor_est_i[CORDIC_WIDTH-2], phase_cor_est_i};
+assign cordic_cartesian_tdata[2*CORDIC_WIDTH_REAL-1:CORDIC_WIDTH_REAL]  = { {(CORDIC_WIDTH_REAL-CORDIC_WIDTH){1'b0}}, phase_cor_est_q[CORDIC_WIDTH-2], phase_cor_est_q};
+
 assign cordic_cartesian_tvalid = phase_cor_est_strobe;
 
 
 // cordic_cartesian_tvalid -> m_axis_dout_tvalid 20 clks
 wire m_axis_dout_tvalid;
-wire [15:0] m_axis_dout_tdata;              // 最大值8191, 最小值-8192
-wire [13:0] phase_out;                      // m_axis_dout_tdata * (2 << DDS_PHASE_WIDTH) / 16384
-assign phase_out = m_axis_dout_tdata[13:0]; // 只有低14bit有效, 高2bit都是额外的符号位
+wire [CORDIC_WIDTH-1:0] m_axis_dout_tdata;              // 最大值(2**(CORDIC_WIDTH-3)-1), 最小值-(2**(CORDIC_WIDTH-3))
+wire [CORDIC_WIDTH-3:0] phase_out;                      // m_axis_dout_tdata * (2 << DDS_PHASE_WIDTH) / (2**(CORDIC_WIDTH-2))
+assign phase_out = m_axis_dout_tdata[CORDIC_WIDTH-3:0]; // 高2bit是额外的符号位
 cordic_arctan u_cordic_arctan (
     .aclk(clk),
     .s_axis_cartesian_tvalid(cordic_cartesian_tvalid),
@@ -78,13 +82,13 @@ end
 
 // symbol_aligned_strobe -> m_axis_data_tdata 1 clk
 wire [31:0] m_axis_data_tdata;
-assign phase_corr_q = m_axis_data_tdata[31:16];
-assign phase_corr_i = m_axis_data_tdata[15:0];
+assign phase_corr_dds_q = m_axis_data_tdata[31:16];
+assign phase_corr_dds_i = m_axis_data_tdata[15:0];
 dds_lut_p14a16 dds_lut_p14a16 (
     .aclk(clk),                                     // input wire aclk
     .aclken(symbol_aligned_strobe),                 // input wire aclken
     .s_axis_config_tvalid(1'b1),                    // input wire s_axis_config_tvalid
-    .s_axis_config_tdata({2'b0, phase_out}),        // input wire [15 : 0] s_axis_config_tdata
+    .s_axis_config_tdata(phase_out),                // input wire [15 : 0] s_axis_config_tdata
     .m_axis_data_tvalid(m_axis_data_tvalid),        // output wire m_axis_data_tvalid
     .m_axis_data_tdata(m_axis_data_tdata)           // output wire [31 : 0] m_axis_data_tdata
 );

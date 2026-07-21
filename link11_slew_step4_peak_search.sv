@@ -1,8 +1,7 @@
 module link11_slew_step4_peak_search #(
     parameter LPF_WIDTH = 16,
-    // 互相关已知序列的最后一个symbol对应索引
+    // 自相关窗口
     parameter SYMBOL_NUMS_TO_FIND = 3,
-    parameter KNOWN_SEQUENCE_END_SYMBOL = 5,
     parameter PREAMBLE_SYMBOL_NUM = 192
 ) (
     input wire clk,
@@ -17,8 +16,6 @@ module link11_slew_step4_peak_search #(
     output reg phase_reference_valid
 );
 
-// 第一个 correlation_strobe 对应的索引 
-localparam FIRST_WINDOW_END_SYMBOL = KNOWN_SEQUENCE_END_SYMBOL + 1 - SYMBOL_NUMS_TO_FIND;
 
 localparam COR_WIDTH = 2*LPF_WIDTH+$clog2(SYMBOL_NUMS_TO_FIND);
 localparam MAG_LATENCY = 3;
@@ -64,24 +61,24 @@ reg [COR_WIDTH-1:0] best_i;
 reg [COR_WIDTH-1:0] best_q;
 reg search_finished;
 
-// 相关结果依次对应窗口1~3, 2~4, 3~5, 因此末尾symbol索引从3递增.
+// 当前的自相关幅度对应了第几个index(从1开始计数)
 always @(posedge clk) begin
     if(!rst_n) begin
-        window_end_symbol <= FIRST_WINDOW_END_SYMBOL;
+        window_end_symbol <= SYMBOL_NUMS_TO_FIND;
         best_window_end_symbol <= 0;
         best_mag <= 0;
         best_i <= 0;
         best_q <= 0;
         search_finished <= 0;
     end else if(demod_done) begin
-        window_end_symbol <= FIRST_WINDOW_END_SYMBOL;   // 当前最大值对应RAM里存的第3个symbol
+        window_end_symbol <= SYMBOL_NUMS_TO_FIND;   // 当前最大值对应RAM里存的第3个symbol
         best_window_end_symbol <= 0;
         best_mag <= 0;
         best_i <= 0;
         best_q <= 0;
         search_finished <= 0;
     end else if(correlation_mag_strobe) begin
-        if((window_end_symbol == FIRST_WINDOW_END_SYMBOL) ||
+        if((window_end_symbol == SYMBOL_NUMS_TO_FIND) ||
            (correlation_mag > best_mag)) begin
             best_window_end_symbol <= window_end_symbol;
             best_mag <= correlation_mag;
@@ -94,10 +91,22 @@ always @(posedge clk) begin
         end else begin
             window_end_symbol <= window_end_symbol + 1'b1;
         end
-    end else begin
-        search_finished <= 0;
     end
 end
+
+
+wire search_finished_pos;
+edge_detect #(
+    .NO_LATENCY ( 0 ))
+ u_edge_detect (
+    .clk                     ( clk                  ),
+    .flag                    ( search_finished      ),
+
+    .flag_pos                ( search_finished_pos  ),
+    .flag_neg                (                      )
+);
+
+
 
 reg [COR_WIDTH-1:0] phase_i;
 reg [COR_WIDTH-1:0] phase_q;
@@ -122,15 +131,10 @@ always @(posedge clk) begin
         phase_q <= 0;
         preamble_start_symbol_offset <= 0;
         normalizing <= 0;
-    end else if(search_finished) begin
+    end else if(search_finished_pos) begin
         phase_i <= best_i;
         phase_q <= best_q;
-        if(best_window_end_symbol > KNOWN_SEQUENCE_END_SYMBOL) begin
-            preamble_start_symbol_offset <=
-                best_window_end_symbol - KNOWN_SEQUENCE_END_SYMBOL;
-        end else begin
-            preamble_start_symbol_offset <= 0;
-        end
+        preamble_start_symbol_offset <= best_window_end_symbol;
         normalizing <= 1;
     end else if(normalizing) begin
         if(phase_normalized) begin
