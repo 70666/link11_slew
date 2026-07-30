@@ -3,9 +3,15 @@ module link11_slew_simulate (
 
 // tx param
 localparam SAMPLE_CLK_NUM = 32;
-localparam SYMBOL_SAMPLE_NUM = 32;
+localparam SYMBOL_SAMPLE_NUM = 64;
 localparam real CARRIER_FREQ_OFFSET_HZ = 15.0;
-localparam AMPLITUDE = 30000;
+localparam AMPLITUDE = 20000;
+localparam NOISE_STDDEV = 1000;
+localparam NOISE_SEED = 1;
+localparam MULTIPATH_ENABLE = 1'b0;
+localparam MULTIPATH_DELAY_SAMPLES = 4;
+localparam real MULTIPATH_GAIN = 0.25;
+localparam real MULTIPATH_PHASE_DEG = 30.0;
 localparam DATA_BLOCK_NUM = 5;
 // rx param
 localparam DATA_WIDTH = 16;
@@ -42,7 +48,7 @@ wire [7:0] tx_scramble_idx;
 wire [2:0] tx_scramble_sym;
 wire [2:0] tx_symbol_phase;
 
-wire [31:0] envelope_detection = 30000;
+wire [31:0] envelope_detection = 18000;
 
 localparam [32:0] HEADER_RAW_PAYLOAD = 33'b10110_01101_11000_10101_00110_11100_100;
 localparam [DATA_BLOCK_NUM*48-1:0] DATA_RAW_PAYLOAD = {DATA_BLOCK_NUM{48'h1234_5678_9ABC}};
@@ -51,6 +57,12 @@ link11_slew_tx_top_sim #(
     .SYMBOL_SAMPLE_NUM ( SYMBOL_SAMPLE_NUM ),
     .CARRIER_FREQ_OFFSET_HZ ( CARRIER_FREQ_OFFSET_HZ ),
     .AMPLITUDE         ( AMPLITUDE         ),
+    .NOISE_STDDEV      ( NOISE_STDDEV      ),
+    .NOISE_SEED        ( NOISE_SEED        ),
+    .MULTIPATH_ENABLE  ( MULTIPATH_ENABLE  ),
+    .MULTIPATH_DELAY_SAMPLES ( MULTIPATH_DELAY_SAMPLES ),
+    .MULTIPATH_GAIN    ( MULTIPATH_GAIN    ),
+    .MULTIPATH_PHASE_DEG ( MULTIPATH_PHASE_DEG ),
     .DATA_BLOCK_NUM    ( DATA_BLOCK_NUM    ),
     .HEADER_RAW_PAYLOAD ( HEADER_RAW_PAYLOAD ),
     .DATA_RAW_PAYLOAD   ( DATA_RAW_PAYLOAD   ),
@@ -88,7 +100,7 @@ link11_slew_demod_top #(
     .signal_if_i             ( tx_i                 ),
     .signal_if_q             ( tx_q                 ),
     .envelope_detection      ( envelope_detection   ),
-    .mixer_mag_thres         ( 65536 * 1000         )
+    .mixer_mag_thres         ( 65536 * 500          )
 );
 
 

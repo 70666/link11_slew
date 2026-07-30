@@ -1,18 +1,18 @@
-module link11_slew_step3_ram_cache #(
+module link11_slew_step5_ram_cache #(
     parameter RAM_CACHE_DEPTH = 16,
-    parameter LPF_WIDTH = 16
+    parameter SYMBOL_DATA_WIDTH = 16
 ) (
     input wire clk,
     input wire rst_n,
     input wire correcting,
-    input wire [LPF_WIDTH-1:0] symbol_aligned_i, symbol_aligned_q,
-    input wire symbol_aligned_strobe,
-    input wire signal_valid_start,
-    output wire [LPF_WIDTH-1:0] ram_cache_out_i, ram_cache_out_q,
+    input wire [SYMBOL_DATA_WIDTH-1:0] symbol_i, symbol_q,
+    input wire symbol_strobe,
+    input wire preamble_aligned_start,
+    output wire [SYMBOL_DATA_WIDTH-1:0] ram_cache_out_i, ram_cache_out_q,
     output wire ram_cache_out_strobe
 );
     
-localparam WRITE_WIDTH = 2*LPF_WIDTH;
+localparam WRITE_WIDTH = 2*SYMBOL_DATA_WIDTH;
 localparam WRITE_DEPTH = RAM_CACHE_DEPTH;
 localparam READ_WIDTH = WRITE_WIDTH;
 localparam RAM_LATENCY = 1;                 
@@ -27,8 +27,8 @@ reg [ADDR_WIDTH-1:0] addra;
 reg enb;
 reg [ADDR_WIDTH-1:0] addrb;
 wire [READ_WIDTH-1:0] doutb;
-assign ram_cache_out_i = doutb[LPF_WIDTH-1:0];
-assign ram_cache_out_q = doutb[2*LPF_WIDTH-1:LPF_WIDTH];
+assign ram_cache_out_i = doutb[SYMBOL_DATA_WIDTH-1:0];
+assign ram_cache_out_q = doutb[2*SYMBOL_DATA_WIDTH-1:SYMBOL_DATA_WIDTH];
 
 
 always @(posedge clk ) begin
@@ -37,21 +37,20 @@ always @(posedge clk ) begin
         addra <= 0;
         wea <= 0;
     end else begin
-        if(signal_valid_start) begin
+        if(preamble_aligned_start) begin    // 开始写, 并且重置写地址, 确保从一个已知的状态读出
+            addra <= 0;
             wea <= 0;
-        end else if(symbol_aligned_strobe) begin
-            wea <= 1;
-            dina <= {symbol_aligned_q, symbol_aligned_i};
-        end else begin
-            wea <= 0;
-        end
-        if(wea) begin
-            if(addra < WRITE_DEPTH - 1) begin
-                addra <= addra + 1;
-            end else begin
-                addra <= 0;
+        end else begin      // 写状态
+            wea <= symbol_strobe;
+            dina <= {symbol_q, symbol_i};
+            if(wea) begin
+                if(addra < WRITE_DEPTH - 1) begin
+                    addra <= addra + 1;
+                end else begin
+                    addra <= 0;
+                end
             end
-        end
+        end 
     end
 end
 
@@ -60,14 +59,19 @@ always @(posedge clk ) begin
         enb <= 0;
         addrb <= 0;
     end else begin
-        enb <= correcting & symbol_aligned_strobe;
-        if(enb) begin
-            if(addrb < WRITE_DEPTH - 1 ) begin
-                addrb <= addrb + 1;
-            end else begin
-                addrb <= 0;
+        if(correcting) begin
+            enb <= symbol_strobe;
+            if(enb) begin
+                if(addrb < WRITE_DEPTH - 1 ) begin
+                    addrb <= addrb + 1;
+                end else begin
+                    addrb <= 0;
+                end
             end
-        end
+        end else begin                      // 每次信号到来时, correcting变0会将状态复位至已知
+            enb <= 0;
+            addrb <= 0;
+        end   
     end
 end
 

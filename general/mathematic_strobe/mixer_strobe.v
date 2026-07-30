@@ -1,4 +1,5 @@
 // 总共7个延迟
+// 注意, 虽然输出位宽是 A_DATA_WIDTH+B_DATA_WIDTH. 但是只要不是-MAX * -MAX = MAX^2, 那么最高位和次高位都是符号位
 module mixer_strobe #(
     parameter A_DATA_WIDTH = 16,
     parameter B_DATA_WIDTH = 16,

@@ -14,7 +14,7 @@ module link11_slew_step7_flow_ctrl (
 
 localparam NCS = 0;
 localparam PICKET = 1;
-localparam EOM_TOLERANCE_THRESHOLD = 85;
+localparam EOM_TOLERANCE_THRESHOLD = 86;
 
 wire [6:0] ones_count;
 reg [6:0] ones_count_pipe;
@@ -50,11 +50,12 @@ always @(posedge clk ) begin
     end
 end
 
+// 包络连低4个symbol, 解到EOM字段, 或者header 的T为1, 没有EOM字段
 wire eom_block_found;
 assign eom_block_found = (cnt_envelope_low >= 4) || deinterleaved_strobe_pipe && 
 (
-    deinterleaved_bits <= (90 - EOM_TOLERANCE_THRESHOLD) && device_type == NCS || 
-    deinterleaved_bits >= EOM_TOLERANCE_THRESHOLD      && device_type == PICKET
+    ones_count_pipe <= (90 - EOM_TOLERANCE_THRESHOLD) && device_type == NCS || 
+    ones_count_pipe >= EOM_TOLERANCE_THRESHOLD      && device_type == PICKET
 );
 
 always @(posedge clk ) begin

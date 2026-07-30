@@ -1,7 +1,8 @@
 module link11_slew_step4_data_corrector #(
     parameter LPF_WIDTH = 16,
     parameter WINDOW_NUM = 16,
-    parameter PREAMBLE_SYMBOL_NUM = 192
+    parameter PREAMBLE_SYMBOL_NUM = 192,
+    parameter CACHE_ADDR_WIDTH = 1
 ) (
     input wire clk,
     input wire rst_n,
@@ -19,75 +20,20 @@ module link11_slew_step4_data_corrector #(
     output reg preamble_aligned_start       // start落后于strobe一个时钟
 );
 
-localparam CACHE_MARGIN = 64;
-localparam CACHE_DEPTH = PREAMBLE_SYMBOL_NUM * WINDOW_NUM + CACHE_MARGIN;
-localparam CACHE_ADDR_WIDTH = $clog2(CACHE_DEPTH);
+
 localparam SYMBOL_INDEX_WIDTH = $clog2(PREAMBLE_SYMBOL_NUM + 1);
-localparam WINDOW_WIDTH = $clog2(WINDOW_NUM + 1);
-localparam CACHE_RAM_LATENCY = 2;
+
 localparam ADDRESS_LATENCY = 2;
 localparam MIXER_OUT_WIDTH = 2 * LPF_WIDTH;
 localparam [WINDOW_WIDTH-1:0] WINDOW_NUM_VALUE = WINDOW_NUM;
 
-reg [CACHE_ADDR_WIDTH-1:0] cache_write_addr;
-reg [CACHE_ADDR_WIDTH-1:0] cache_read_addr;
-reg cache_reading;
-wire cache_read_enable;
-wire cache_read_strobe;
-wire [2*LPF_WIDTH-1:0] cache_read_data;
 
-// 把所有symbol的所有采样点全部存下, 再根据找到的索引算出读地址的起始位置
-always @(posedge clk) begin
-    if(!rst_n) begin
-        cache_write_addr <= 0;
-    end else if(demod_done) begin
-        cache_write_addr <= 0;
-    end else if(data_in_strobe) begin
-        if(cache_write_addr == CACHE_DEPTH - 1) begin
-            cache_write_addr <= 0;
-        end else begin
-            cache_write_addr <= cache_write_addr + 1'b1;
-        end
-    end
-end
-
-// 该RAM带来CACHE_RAM_LATENCY clks读延时.
-sdpram_wrapper #(
-    .WRITE_WIDTH ( 2 * LPF_WIDTH     ),
-    .WRITE_DEPTH ( CACHE_DEPTH       ),
-    .READ_WIDTH  ( 2 * LPF_WIDTH     ),
-    .RAM_LATENCY ( CACHE_RAM_LATENCY ))
- u_data_cache (
-    .clk                     ( clk                    ),
-    .wea                     ( data_in_strobe         ),
-    .enb                     ( cache_read_enable      ),
-    .dina                    ( {data_in_q, data_in_i} ),
-    .addra                   ( cache_write_addr       ),
-    .addrb                   ( cache_read_addr        ),
-
-    .doutb                   ( cache_read_data        )
-);
 
 wire [CACHE_ADDR_WIDTH-1:0] preamble_start_addr;
 wire [2*LPF_WIDTH-1:0] phase_reference_delay;
 wire phase_reference_valid_delay;
 
-// symbol偏移转换为采样地址带来ADDRESS_LATENCY clks延时.
-multiplier #(
-    .IMPL_TYPE ( "LUT"              ),
-    .A_WIDTH   ( SYMBOL_INDEX_WIDTH ),
-    .B_WIDTH   ( WINDOW_WIDTH       ),
-    .A_TYPE    ( 0                  ),
-    .B_TYPE    ( 0                  ),
-    .LATENCY   ( ADDRESS_LATENCY    ),
-    .OUT_WIDTH ( CACHE_ADDR_WIDTH   ))
- u_start_address (
-    .clk                     ( clk                          ),
-    .A                       ( preamble_start_symbol_offset ),
-    .B                       ( WINDOW_NUM_VALUE             ),
 
-    .P                       ( preamble_start_addr          )
-);
 
 // 相位参考和valid补ADDRESS_LATENCY clks, 与采样地址对齐.
 delay #(
@@ -112,7 +58,11 @@ delay #(
     .data_out                ( phase_reference_valid_delay  )
 );
 
-// 控制读
+
+reg cache_reading;
+wire cache_read_strobe;
+
+// 粗频偏信号缓存RAM读出逻辑
 always @(posedge clk) begin
     if(!rst_n) begin
         cache_read_addr <= 0;
@@ -170,8 +120,8 @@ mixer_strobe #(
     .oq           ( corrected_mixer_q                             )
 );
 
-assign data_out_i = corrected_mixer_i[MIXER_OUT_WIDTH-1-:LPF_WIDTH];
-assign data_out_q = corrected_mixer_q[MIXER_OUT_WIDTH-1-:LPF_WIDTH];
+assign data_out_i = corrected_mixer_i[MIXER_OUT_WIDTH-2-:LPF_WIDTH];
+assign data_out_q = corrected_mixer_q[MIXER_OUT_WIDTH-2-:LPF_WIDTH];
 assign data_out_strobe = corrected_mixer_strobe;
 
 reg first_output_pending;

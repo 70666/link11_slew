@@ -40,8 +40,8 @@ DDC #(
 // 低通滤波, 滤除高频 (暂时跳过)
 wire [LPF_WIDTH-1:0] signal_lpf_i, signal_lpf_q;
 wire signal_lpf_strobe;
-assign signal_lpf_i = zeroif_sync_i[DDC_WIDTH-1-:LPF_WIDTH];
-assign signal_lpf_q = zeroif_sync_q[DDC_WIDTH-1-:LPF_WIDTH];
+assign signal_lpf_i = zeroif_sync_i[DDC_WIDTH-2-:LPF_WIDTH];
+assign signal_lpf_q = zeroif_sync_q[DDC_WIDTH-2-:LPF_WIDTH];
 assign signal_lpf_strobe = zeroif_sync_strobe;
 
 // 包络检波, 获取包络

@@ -1,11 +1,10 @@
-module link11_slew_step6_8psk_demod #(
+module link11_slew_step6 #(
     parameter EQ_WIDTH = 16,
     parameter WINDOW_NUM = 16,
     parameter KNOWN_SEQUENCE_END_SYMBOL = 5
 ) (
     input wire clk,
     input wire rst_n,
-    input wire demod_done,
     input wire [EQ_WIDTH+15:0] mixer_mag_thres,
     input wire [EQ_WIDTH-1:0] equalized_i, equalized_q,   
     input wire equalized_strobe,
@@ -18,22 +17,11 @@ module link11_slew_step6_8psk_demod #(
     // 1.取采样点, 求一个窗口内的平均, 需要start信号来对齐
     wire sample_strobe;
     wire [EQ_WIDTH-1:0] sample_i, sample_q;
-    link11_slew_step6_sample #(
-        .WINDOW_NUM ( WINDOW_NUM ),
-        .EQ_WIDTH   ( EQ_WIDTH   ))
-    u_link11_slew_step6_sample (
-        .clk                     ( clk                              ),
-        .rst_n                   ( rst_n                            ),
-        .equalized_i             ( equalized_i       [EQ_WIDTH-1:0] ),
-        .equalized_q             ( equalized_q       [EQ_WIDTH-1:0] ),
-        .equalized_strobe        ( equalized_strobe                 ),
-        .equalized_start         ( equalized_start                  ),
-        .demod_done              ( demod_done                       ),
 
-        .sample_strobe           ( sample_strobe                    ),
-        .sample_i                ( sample_i          [EQ_WIDTH-1:0] ),
-        .sample_q                ( sample_q          [EQ_WIDTH-1:0] )
-    );
+    assign sample_strobe = equalized_strobe;
+    assign sample_i = equalized_i;
+    assign sample_q = equalized_q;
+    
 
     // 2.本地模拟加扰器, 生成加扰信号
     wire out_strobe;
@@ -45,7 +33,6 @@ module link11_slew_step6_8psk_demod #(
         .rst_n                   ( rst_n              ),
         .start                   ( equalized_start    ),
         .strobe                  ( sample_strobe      ),
-        .demod_done              ( demod_done         ),
 
         .out_strobe              ( out_strobe         ),
         .out_i                   ( out_i       [15:0] ),
@@ -98,7 +85,7 @@ module link11_slew_step6_8psk_demod #(
         .reset                   ( 1'b0             ),
         .i                       ( mixer_i          ),
         .q                       ( mixer_q          ),
-        .input_strobe            ( mixer_strobe     ),
+        .in_strobe               ( mixer_strobe     ),
 
         .mag                     ( mag_mixer        ),
         .mag_stb                 ( mag_mixer_strobe )

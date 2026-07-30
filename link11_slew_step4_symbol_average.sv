@@ -4,7 +4,7 @@ module link11_slew_step4_symbol_average #(
 ) (
     input wire clk,
     input wire rst_n,
-    input wire demod_done,
+    input wire freq_corrected_start,
     input wire [LPF_WIDTH-1:0] data_in_i,
     input wire [LPF_WIDTH-1:0] data_in_q,
     input wire data_in_strobe,
@@ -37,7 +37,7 @@ end
 always @(posedge clk) begin
     if(!rst_n) begin
         sample_index <= 0;
-    end else if(demod_done) begin
+    end else if(freq_corrected_start) begin
         sample_index <= 0;
     end else if(data_in_strobe) begin
         if(sample_index == WINDOW_NUM - 1) begin

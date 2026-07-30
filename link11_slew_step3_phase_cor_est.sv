@@ -6,7 +6,6 @@ module link11_slew_step3_phase_cor_est #(
 )(
     input wire clk,
     input wire rst_n,
-    input wire demod_done,
     input wire signal_valid_start,                                                  // start -> enb -> doutb/strobe 期间至少跨2个时钟
     input wire [LPF_WIDTH-1:0] symbol_aligned_i,
     input wire [LPF_WIDTH-1:0] symbol_aligned_q,
@@ -30,7 +29,6 @@ localparam PHASE_COR_WIDTH = SAMPLE_SUM_WIDTH + $clog2(SYMBOL_NUM_TO_EST);
 
 
 
-reg collecting;
 reg [SAMPLE_CNT_WIDTH-1:0] cnt_samples_in_symbol;
 reg [SYMBOL_CNT_WIDTH-1:0] cnt_symbols_to_est;
 reg [LPF_WIDTH-1:0] last_sample_i, last_sample_q;
@@ -40,27 +38,18 @@ reg mixer_in_strobe;
 // 只在当前 symbol 内做相邻采样相位差, 跳过 sample0, 避免跨 symbol 相位差混入估计.
 always @(posedge clk) begin
     if(~rst_n) begin
-        collecting <= 1'b0;
-        cnt_samples_in_symbol <= 0;
-        cnt_symbols_to_est <= 0;
-        last_sample_i <= 0;
-        last_sample_q <= 0;
-        mixer_in_strobe <= 1'b0;
-    end else if(demod_done) begin
-        collecting <= 1'b0;
         cnt_samples_in_symbol <= 0;
         cnt_symbols_to_est <= 0;
         last_sample_i <= 0;
         last_sample_q <= 0;
         mixer_in_strobe <= 1'b0;
     end else if(signal_valid_start) begin
-        collecting <= 1'b1;
         cnt_samples_in_symbol <= 0;
         cnt_symbols_to_est <= 0;
         last_sample_i <= 0;
         last_sample_q <= 0;
         mixer_in_strobe <= 1'b0;
-    end else if(collecting && symbol_aligned_strobe) begin
+    end else if(symbol_aligned_strobe) begin
         current_sample_i <= symbol_aligned_i;
         current_sample_q <= symbol_aligned_q;
         last_sample_i <= current_sample_i;
@@ -70,13 +59,11 @@ always @(posedge clk) begin
         if(cnt_samples_in_symbol == WINDOW_NUM - 1) begin
             cnt_samples_in_symbol <= 0;
             if(cnt_symbols_to_est == SYMBOL_NUM_TO_EST - 1) begin               // 对于究竟要采几个SYMBOL允许有一个误差, 这里可能控制的不完全准确
-                collecting <= 1'b0;
+
             end else begin
-                collecting <= 1'b1;
                 cnt_symbols_to_est <= cnt_symbols_to_est + 1'b1;
             end
         end else begin
-            collecting <= 1'b1;
             cnt_samples_in_symbol <= cnt_samples_in_symbol + 1'b1;
         end
     end else begin
@@ -187,10 +174,10 @@ always @(posedge clk) begin
     if(~rst_n) begin
         phase_sum_temp_i <= 0;
         phase_sum_temp_q <= 0;
-    end else if(demod_done || signal_valid_start) begin
+    end else if(signal_valid_start) begin
         phase_sum_temp_i <= 0;
         phase_sum_temp_q <= 0;
-    end else if(collecting && symbol_aligned_strobe && (cnt_samples_in_symbol == 0)) begin
+    end else if(symbol_aligned_strobe && (cnt_samples_in_symbol == 0)) begin
         phase_sum_temp_i <= 0;
         phase_sum_temp_q <= 0;
     end else if(sample_adder_out_strobe) begin
@@ -280,7 +267,7 @@ always @(posedge clk) begin
     if(~rst_n) begin
         phase_cor_temp_i <= 0;
         phase_cor_temp_q <= 0;
-    end else if(demod_done || signal_valid_start) begin
+    end else if(signal_valid_start) begin
         phase_cor_temp_i <= 0;
         phase_cor_temp_q <= 0;
     end else if(symbol_adder_out_strobe) begin

@@ -4,11 +4,10 @@ module link11_slew_step3_phase_corr_gen#(
 )(
     input wire clk,
     input wire rst_n,
-    input wire demod_done,
+    input wire signal_valid_start,
     input wire phase_cor_est_strobe,
     input wire [CORDIC_WIDTH-2:0] phase_cor_est_i, phase_cor_est_q,
     input wire symbol_aligned_strobe,
-    input wire [LPF_WIDTH-1:0] symbol_aligned_i, symbol_aligned_q,
     output wire [15:0] phase_corr_dds_i, phase_corr_dds_q,
     output reg correcting = 0   // DDS生成信号是否有效的标识, 允许读ram
 );
@@ -29,8 +28,8 @@ assign cordic_cartesian_tvalid = phase_cor_est_strobe;
 // cordic_cartesian_tvalid -> m_axis_dout_tvalid 20 clks
 wire m_axis_dout_tvalid;
 wire [CORDIC_WIDTH-1:0] m_axis_dout_tdata;              // 最大值(2**(CORDIC_WIDTH-3)-1), 最小值-(2**(CORDIC_WIDTH-3))
-wire [CORDIC_WIDTH-3:0] phase_out;                      // m_axis_dout_tdata * (2 << DDS_PHASE_WIDTH) / (2**(CORDIC_WIDTH-2))
-assign phase_out = m_axis_dout_tdata[CORDIC_WIDTH-3:0]; // 高2bit是额外的符号位
+reg [CORDIC_WIDTH-3:0] phase_out;                      // m_axis_dout_tdata * (2 << DDS_PHASE_WIDTH) / (2**(CORDIC_WIDTH-2))
+
 cordic_arctan u_cordic_arctan (
     .aclk(clk),
     .s_axis_cartesian_tvalid(cordic_cartesian_tvalid),
@@ -55,11 +54,16 @@ always @(posedge clk ) begin
                 end else begin
                     state <= IDLE;
                 end
+                if(m_axis_dout_tvalid) begin
+                    phase_out <= m_axis_dout_tdata[CORDIC_WIDTH-3:0]; // 高2bit是额外的符号位
+                end else begin
+                    phase_out <= 0;
+                end
                 cnt_symbol_strobe <= 0;
                 correcting <= 0;
             end 
             IN_CORR:begin
-                if(demod_done) begin
+                if(signal_valid_start) begin
                     state <= IDLE;
                 end else begin
                     state <= IN_CORR;
@@ -84,7 +88,7 @@ end
 wire [31:0] m_axis_data_tdata;
 assign phase_corr_dds_q = m_axis_data_tdata[31:16];
 assign phase_corr_dds_i = m_axis_data_tdata[15:0];
-dds_lut_p14a16 dds_lut_p14a16 (
+dds_phase_correction dds_phase_correction (
     .aclk(clk),                                     // input wire aclk
     .aclken(symbol_aligned_strobe),                 // input wire aclken
     .s_axis_config_tvalid(1'b1),                    // input wire s_axis_config_tvalid

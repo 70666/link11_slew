@@ -1,3 +1,7 @@
+/*
+    窗口内求和再求幅度平方, 不需要参与状态复位
+    peak_finder需要demod_done或者rst_n复位, 没有复位问题
+*/
 module link11_slew_step2 #(
     parameter LPF_WIDTH = 16,
     parameter WINDOW_NUM = 16
@@ -17,15 +21,16 @@ localparam SEARCH_LENGTH = 2 * WINDOW_NUM;  // 即使第一个symbol不完整依
 localparam WRITE_DEPTH = SEARCH_LENGTH + SEARCH_LENGTH / 4;
 
 localparam SUM_WIDTH = LPF_WIDTH + $clog2(WINDOW_NUM);
+localparam SQUARE_SUM_WIDTH = 2*SUM_WIDTH;
 localparam ADDRA_WIDTH = $clog2(WRITE_DEPTH);
 
 localparam MOVING_SUM_LATENCY = $clog2(WINDOW_NUM) + 1;
-localparam COMP_TO_MAG_LATENCY = 3;
+localparam COMP_TO_MAG_LATENCY = 5;
 localparam RAM_LATENCY = 2;
 localparam PROBE_TO_INDEX_LATENCY = MOVING_SUM_LATENCY + COMP_TO_MAG_LATENCY;
 localparam PROBE_TO_ADDRA_LATENCY = 1;
 
-// MOVING_SUM_LATENCY clks
+// MOVING_SUM_LATENCY clks, 算出一个窗口内的和
 wire [SUM_WIDTH-1:0] sum_out_i, sum_out_q;
 wire sum_out_strobe;
 moving_sum #(
@@ -45,22 +50,21 @@ moving_sum #(
     .data_out_strobe         ( sum_out_strobe               )
 );
 
-// COMP_TO_MAG_LATENCY clks
-wire [SUM_WIDTH-1:0] sum_mag;
-wire sum_mag_strobe;
-complex_to_mag #(
+// COMP_TO_MAG_LATENCY clks 平方和求窗口内和
+wire [SQUARE_SUM_WIDTH-1:0] square_sum;
+wire square_sum_strobe;
+square_sum_strobe #(
     .DATA_WIDTH ( SUM_WIDTH ))
- u_complex_to_mag (
-    .clk                     ( clk                  ),
-    .enable                  ( 1'b1                 ),
-    .reset                   ( ~rst_n               ),
-    .i                       ( sum_out_i            ),
-    .q                       ( sum_out_q            ),
-    .input_strobe            ( sum_out_strobe       ),
+ u_square_sum_strobe (
+    .clk          ( clk                 ),
+    .in_strobe    ( sum_out_strobe      ),
+    .i            ( sum_out_i           ),
+    .q            ( sum_out_q           ),
 
-    .mag                     ( sum_mag              ),
-    .mag_stb                 ( sum_mag_strobe       )
+    .square_sum   ( square_sum          ),
+    .out_strobe   ( square_sum_strobe   )
 );
+
 
 // signal_lpf_envelope_strobe -> addra 1个延时
 reg enb;
@@ -106,7 +110,7 @@ link11_slew_step2_param_align #(
 link11_slew_step2_peak_finder #(
     .WINDOW_NUM    ( WINDOW_NUM    ),
     .ADDRA_WIDTH   ( ADDRA_WIDTH   ),
-    .SUM_WIDTH     ( SUM_WIDTH     ),
+    .SUM_WIDTH     ( SQUARE_SUM_WIDTH     ),
     .RAM_LATENCY   ( RAM_LATENCY   ),
     .DATA_WIDTH    ( LPF_WIDTH    ),
     .SEARCH_LENGTH ( SEARCH_LENGTH ),
@@ -117,7 +121,7 @@ link11_slew_step2_peak_finder #(
     .envelope_sum_mag        ( envelope_sum_mag         ),
     .demod_done              ( demod_done               ),
     .sum_mag_probe           ( sum_mag_probe            ),
-    .sum_mag                 ( sum_mag                  ),
+    .sum_mag                 ( square_sum               ),
     .sum_mag_index           ( sum_mag_index            ),
     .doutb                   ( doutb                    ),
 
@@ -129,8 +133,9 @@ link11_slew_step2_peak_finder #(
     .symbol_aligned_q        ( symbol_aligned_q         )
 );
 
+     
+     
 
-// 找到symbol边界后, 继续找preamble整体边界
 
 
 

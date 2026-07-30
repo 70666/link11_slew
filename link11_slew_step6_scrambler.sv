@@ -6,7 +6,6 @@ module link11_slew_step6_scrambler #(
     input wire rst_n,
     input wire start,
     input wire strobe,
-    input wire demod_done,
     // 相对于strobe有一个延时
     output wire out_strobe,
     output wire [15:0] out_i, out_q
@@ -18,7 +17,7 @@ localparam PIPELINE_LATENCY = 1;            // 最小值为1
 localparam IDLE = 0;                        // 复位
 localparam PREAMBLE_STATE = 1;              // 前导码阶段
 localparam DEMOD_STATE = 2;                 // 解码阶段
-localparam WAIT_FOR_NEW_STATE = 3;          // 等待下次前导码阶段
+// localparam WAIT_FOR_NEW_STATE = 3;          // 等待下次前导码阶段
 
 reg [1:0] state = IDLE;
 reg [$clog2(PREAMBLE_SYMBOL_NUM):0] cnt_preamble;
@@ -29,8 +28,8 @@ always @(posedge clk ) begin
         state <= IDLE;
     end else begin
         case (state)
-            IDLE:               begin
-                state <= WAIT_FOR_NEW_STATE;
+            IDLE:               begin   // 复位完后, 进入前导码等待阶段
+                state <= PREAMBLE_STATE;
             end
             PREAMBLE_STATE:     begin
                 if(cnt_preamble >= PREAMBLE_SYMBOL_NUM - 1)
@@ -39,16 +38,10 @@ always @(posedge clk ) begin
                     state <= PREAMBLE_STATE;
             end
             DEMOD_STATE:        begin
-                if(demod_done)
-                    state <= WAIT_FOR_NEW_STATE;
+                if(start)               // 即将有新信号到来时, 先复位
+                    state <= IDLE;
                 else
                     state <= DEMOD_STATE;
-            end
-            WAIT_FOR_NEW_STATE: begin
-                if(start)
-                    state <= PREAMBLE_STATE;
-                else
-                    state <= WAIT_FOR_NEW_STATE;
             end
         endcase
     end
@@ -74,11 +67,6 @@ always @(posedge clk ) begin
                 cnt <= (cnt >= 159)? 0 : (cnt + 1);
             end
             data_strobe <= strobe;
-        end
-        WAIT_FOR_NEW_STATE: begin
-            cnt <= 159;
-            cnt_preamble <= KNOWN_SEQUENCE_END_SYMBOL;
-            data_strobe <= 0;
         end
     endcase
 end

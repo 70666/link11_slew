@@ -7,7 +7,7 @@ module link11_slew_step4_preamble_correlator #(
 ) (
     input wire clk,
     input wire rst_n,
-    input wire demod_done,
+    input wire freq_corrected_start,
     input wire [LPF_WIDTH-1:0] symbol_average_i,
     input wire [LPF_WIDTH-1:0] symbol_average_q,
     input wire symbol_average_strobe,
@@ -76,7 +76,7 @@ always @(posedge clk) begin
             symbol_q_d[i] <= 0;
         end
         received_symbol_num <= 0;
-    end else if(demod_done) begin
+    end else if(freq_corrected_start) begin
         for(i=0;i<SYMBOL_NUMS_TO_FIND-2;i=i+1) begin
             symbol_i_d[i] <= 0;
             symbol_q_d[i] <= 0;

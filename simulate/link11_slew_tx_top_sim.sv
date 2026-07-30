@@ -7,6 +7,12 @@ module link11_slew_tx_top_sim #(
     parameter integer SYMBOL_SAMPLE_NUM = 1,
     parameter real CARRIER_FREQ_OFFSET_HZ = 0.0,
     parameter signed [15:0] AMPLITUDE = 16'sd16384,
+    parameter integer NOISE_STDDEV = 0,
+    parameter integer NOISE_SEED = 1,
+    parameter MULTIPATH_ENABLE = 1'b0,
+    parameter integer MULTIPATH_DELAY_SAMPLES = 4,
+    parameter real MULTIPATH_GAIN = 0.25,
+    parameter real MULTIPATH_PHASE_DEG = 45.0,
     parameter integer DATA_BLOCK_NUM = 1,
     parameter [32:0] HEADER_RAW_PAYLOAD = 33'b0,
     parameter [DATA_BLOCK_NUM*48-1:0] DATA_RAW_PAYLOAD = {DATA_BLOCK_NUM*48{1'b0}},
@@ -76,7 +82,13 @@ module link11_slew_tx_top_sim #(
         .SAMPLE_CLK_NUM    ( SAMPLE_CLK_NUM    ),
         .SYMBOL_SAMPLE_NUM ( SYMBOL_SAMPLE_NUM ),
         .CARRIER_FREQ_OFFSET_HZ ( CARRIER_FREQ_OFFSET_HZ ),
-        .AMPLITUDE         ( AMPLITUDE         ))
+        .AMPLITUDE         ( AMPLITUDE         ),
+        .NOISE_STDDEV      ( NOISE_STDDEV      ),
+        .NOISE_SEED        ( NOISE_SEED        ),
+        .MULTIPATH_ENABLE  ( MULTIPATH_ENABLE  ),
+        .MULTIPATH_DELAY_SAMPLES ( MULTIPATH_DELAY_SAMPLES ),
+        .MULTIPATH_GAIN    ( MULTIPATH_GAIN    ),
+        .MULTIPATH_PHASE_DEG ( MULTIPATH_PHASE_DEG ))
     u_tx_waveform (
         .clk              ( clk              ),
         .rst_n            ( rst_n            ),

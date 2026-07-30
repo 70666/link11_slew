@@ -4,14 +4,14 @@ module link11_slew_step3 #(
 ) (
     input wire clk,
     input wire rst_n,
-    input wire demod_done,
     input wire [LPF_WIDTH-1:0] symbol_aligned_i,
     input wire [LPF_WIDTH-1:0] symbol_aligned_q,
     input wire symbol_aligned_strobe,
     input wire signal_valid_start,
     output wire [LPF_WIDTH-1:0] freq_corrected_i     , 
     output wire [LPF_WIDTH-1:0] freq_corrected_q     , 
-    output wire                 freq_corrected_strobe 
+    output wire                 freq_corrected_strobe,
+    output wire                 freq_corrected_start
 );
 
 
@@ -19,7 +19,7 @@ localparam SYMBOL_NUM_TO_EST = 64;
 localparam RAM_CACHE_DEPTH = SYMBOL_NUM_TO_EST * WINDOW_NUM + 16;
 
 // 最开始是16, 发现精度不够, 误差太大, 改成20
-localparam CORDIC_WIDTH = 30;
+localparam CORDIC_WIDTH = 32;
 localparam MIXER_OUT_WIDTH = LPF_WIDTH + 16;
 localparam INI_PHASE_WIDTH = 16;
 
@@ -34,7 +34,6 @@ link11_slew_step3_phase_cor_est #(
  u_link11_slew_step3_phase_cor_est (
     .clk                     ( clk                                       ),
     .rst_n                   ( rst_n                                     ),
-    .demod_done              ( demod_done                                ),
     .signal_valid_start      ( signal_valid_start                        ),
     .symbol_aligned_i        ( symbol_aligned_i       [LPF_WIDTH-1:0]    ),
     .symbol_aligned_q        ( symbol_aligned_q       [LPF_WIDTH-1:0]    ),
@@ -54,13 +53,11 @@ link11_slew_step3_phase_corr_gen #(
  u_link11_slew_step3_phase_corr_gen (
     .clk                     ( clk                                       ),
     .rst_n                   ( rst_n                                     ),
-    .demod_done              ( demod_done                                ),
+    .signal_valid_start      ( signal_valid_start                        ),
     .phase_cor_est_strobe    ( phase_cor_est_strobe                      ),
     .phase_cor_est_i         ( phase_cor_est_i        [CORDIC_WIDTH-2:0] ),
     .phase_cor_est_q         ( phase_cor_est_q        [CORDIC_WIDTH-2:0] ),
     .symbol_aligned_strobe   ( symbol_aligned_strobe                     ),
-    .symbol_aligned_i        ( symbol_aligned_i       [LPF_WIDTH-1:0]    ),
-    .symbol_aligned_q        ( symbol_aligned_q       [LPF_WIDTH-1:0]    ),
 
     .phase_corr_dds_i        ( phase_corr_dds_i       [15:0]             ),
     .phase_corr_dds_q        ( phase_corr_dds_q       [15:0]             ),
@@ -76,7 +73,6 @@ link11_slew_step3_ram_cache #(
  u_link11_slew_step3_ram_cache (
     .clk                     ( clk                                    ),
     .rst_n                   ( rst_n                                  ),
-    .demod_done              ( demod_done                             ),
     .correcting              ( correcting                             ),
     .symbol_aligned_i        ( symbol_aligned_i       [LPF_WIDTH-1:0] ),
     .symbol_aligned_q        ( symbol_aligned_q       [LPF_WIDTH-1:0] ),
@@ -104,5 +100,15 @@ link11_slew_step3_freq_corr #(
     .freq_corrected_i        ( freq_corrected_i       [LPF_WIDTH-1:0] ),
     .freq_corrected_q        ( freq_corrected_q       [LPF_WIDTH-1:0] ),
     .freq_corrected_strobe   ( freq_corrected_strobe                  )
+);
+
+edge_detect #(
+    .NO_LATENCY ( 0 ))
+ u_edge_detect (
+    .clk                     ( clk                  ),
+    .flag                    ( correcting           ),
+
+    .flag_pos                ( freq_corrected_start ),
+    .flag_neg                (    )
 );
 endmodule
