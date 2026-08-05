@@ -3,7 +3,6 @@ module link11_slew_step2_peak_finder #(
     parameter ADDRA_WIDTH = 16,
     parameter SUM_WIDTH = 18,
     parameter RAM_LATENCY = 1,
-    parameter DATA_WIDTH = 16,
     parameter SEARCH_LENGTH = 16,
     parameter WRITE_DEPTH = 16
 ) (
@@ -14,12 +13,10 @@ module link11_slew_step2_peak_finder #(
     input wire sum_mag_probe,
     input wire [SUM_WIDTH-1:0] sum_mag,
     input wire [ADDRA_WIDTH-1:0] sum_mag_index,
-    input wire [2*DATA_WIDTH-1:0] doutb,
+
     output reg enb,
     output reg [ADDRA_WIDTH-1:0] addrb,
-    output reg signal_valid_start,
-    output wire symbol_aligned_strobe,
-    output wire [DATA_WIDTH-1:0] symbol_aligned_i, symbol_aligned_q
+    output reg signal_valid_start
 );
     
 localparam IDLE = 0;
@@ -104,17 +101,5 @@ always @(posedge clk ) begin
     endcase
 end
 
-delay #(
-    .DATA_WIDTH ( 1             ),
-    .DELAY_CLK  ( RAM_LATENCY   ),
-    .IMPL_TYPE  ( 0             ))
- u_delay_demod_data_strobe (
-    .clk                     ( clk                  ),
-    .data_in                 ( enb    ),
 
-    .data_out                ( symbol_aligned_strobe   )
-);
-
-assign symbol_aligned_i = doutb[DATA_WIDTH-1:0];
-assign symbol_aligned_q = doutb[2*DATA_WIDTH-1:DATA_WIDTH];
 endmodule

@@ -88,20 +88,32 @@ link11_slew_tx_top_sim #(
     .tx_q                    ( tx_q           [15:0] )
 );
 
-
+wire        viterbi_done     ;  
+wire [59:0] decoded_bits     ;  
+wire [5:0]  decoded_length   ;  
+wire [5:0]  best_start_state ;  
+wire [7:0]  best_path_metric ;  
+wire        crc_check_pass   ;  
+wire        crc_check_strobe ;  
 link11_slew_demod_top #(
     .DATA_WIDTH              ( DATA_WIDTH              ),
     .WINDOW_NUM              ( WINDOW_NUM              ),
     .STANDARD_1800_PHASE_INC ( STANDARD_1800_PHASE_INC ))
  u_link11_slew_demod_top (
-    .clk                     ( clk                  ),
-    .rst_n                   ( rst_n                ),
-    .signal_if_strobe        ( iq_strobe            ),
-    .signal_if_i             ( tx_i                 ),
-    .signal_if_q             ( tx_q                 ),
-    .envelope_detection      ( envelope_detection   ),
-    .mixer_mag_thres         ( 65536 * 500          )
+    .clk                     ( clk                                    ),
+    .rst_n                   ( rst_n                                  ),
+    .device_type             ( device_type                            ),
+    .signal_if_strobe        ( iq_strobe                       ),
+    .signal_if_i             ( tx_i         [DATA_WIDTH-1:0]   ),
+    .signal_if_q             ( tx_q         [DATA_WIDTH-1:0]   ),
+    .envelope_detection      ( envelope_detection  [2*DATA_WIDTH-1:0] ),
+
+    .viterbi_done            ( viterbi_done                           ),
+    .decoded_bits            ( decoded_bits        [59:0]             ),
+    .decoded_length          ( decoded_length      [5:0]              ),
+    .best_start_state        ( best_start_state    [5:0]              ),
+    .best_path_metric        ( best_path_metric    [7:0]              ),
+    .crc_check_pass          ( crc_check_pass                         ),
+    .crc_check_strobe        ( crc_check_strobe                       )
 );
-
-
 endmodule

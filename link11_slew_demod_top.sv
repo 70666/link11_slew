@@ -1,6 +1,6 @@
 module link11_slew_demod_top #(
     parameter DATA_WIDTH = 16,                          // 输入中频的位宽
-    parameter WINDOW_NUM = 16,                          // 一个符号对应采样点个数
+    parameter WINDOW_NUM = 64,                          // 一个符号对应采样点个数
     parameter STANDARD_1800_PHASE_INC = 1600            // 16bit, 1800 * 65536 / sample clk freq
 ) (
     input wire clk,
@@ -10,7 +10,7 @@ module link11_slew_demod_top #(
     input wire [DATA_WIDTH-1:0] signal_if_i,            // 中频信号
     input wire [DATA_WIDTH-1:0] signal_if_q,
     input wire [2*DATA_WIDTH-1:0] envelope_detection,   // 前导码检测信号包络阈值
-    input wire [31:0] mixer_mag_thres       ,           // 结束解调信号消失包络阈值
+    
     output wire        viterbi_done         ,
     output wire [59:0] decoded_bits         ,
     output wire [5:0]  decoded_length       ,
@@ -63,104 +63,106 @@ wire demod_done;                                            // 后续解调模�
 wire [LPF_WIDTH-1:0] symbol_aligned_i, symbol_aligned_q;    // symbol边界对齐后的信号
 wire symbol_aligned_strobe;                                 // 采样点strobe
 wire signal_valid_start;                                    // 检测到信号
+wire symbol_aligned_envelope;
 link11_slew_step2 #(
     .LPF_WIDTH  ( LPF_WIDTH  ),
     .WINDOW_NUM ( WINDOW_NUM ))
  u_link11_slew_step2 (
-    .clk                         ( clk                                                  ),
-    .rst_n                       ( rst_n                                                ),
-    .demod_done                  ( demod_done                                           ),
-    .envelope                    ( envelope                                             ),
-    .signal_lpf_envelope_i       ( signal_lpf_envelope_i                [LPF_WIDTH-1:0] ),
-    .signal_lpf_envelope_q       ( signal_lpf_envelope_q                [LPF_WIDTH-1:0] ),
-    .signal_lpf_envelope_strobe  ( signal_lpf_envelope_strobe                           ),
+    .clk                         ( clk                                         ),
+    .rst_n                       ( rst_n                                       ),
+    .demod_done                  ( demod_done                                  ),
+    .envelope                    ( envelope                                    ),
+    .signal_lpf_envelope_i       ( signal_lpf_envelope_i       [LPF_WIDTH-1:0] ),
+    .signal_lpf_envelope_q       ( signal_lpf_envelope_q       [LPF_WIDTH-1:0] ),
+    .signal_lpf_envelope_strobe  ( signal_lpf_envelope_strobe                  ),
 
-    .symbol_aligned_i            ( symbol_aligned_i                     [LPF_WIDTH-1:0] ),
-    .symbol_aligned_q            ( symbol_aligned_q                     [LPF_WIDTH-1:0] ),
-    .symbol_aligned_strobe       ( symbol_aligned_strobe                                ),
-    .signal_valid_start          ( signal_valid_start                                   )
+    .symbol_aligned_i            ( symbol_aligned_i            [LPF_WIDTH-1:0] ),
+    .symbol_aligned_q            ( symbol_aligned_q            [LPF_WIDTH-1:0] ),
+    .symbol_aligned_strobe       ( symbol_aligned_strobe                       ),
+    .signal_valid_start          ( signal_valid_start                          ),
+    .symbol_aligned_envelope     ( symbol_aligned_envelope                     )
 );
 
-// 第三步, 粗频偏校正
-wire [LPF_WIDTH-1:0] freq_corrected_i     ; 
-wire [LPF_WIDTH-1:0] freq_corrected_q     ; 
-wire                 freq_corrected_strobe;
-wire                 freq_corrected_start;
-link11_slew_step3 #(
-    .LPF_WIDTH  ( LPF_WIDTH  ),
-    .WINDOW_NUM ( WINDOW_NUM ))
- u_link11_slew_step3 (
-    .clk                     ( clk                                    ),
-    .rst_n                   ( rst_n                                  ),
-    .symbol_aligned_i        ( symbol_aligned_i       [LPF_WIDTH-1:0] ),
-    .symbol_aligned_q        ( symbol_aligned_q       [LPF_WIDTH-1:0] ),
-    .symbol_aligned_strobe   ( symbol_aligned_strobe                  ),
-    .signal_valid_start      ( signal_valid_start                     ),
-
-    .freq_corrected_i        ( freq_corrected_i       [LPF_WIDTH-1:0] ),
-    .freq_corrected_q        ( freq_corrected_q       [LPF_WIDTH-1:0] ),
-    .freq_corrected_strobe   ( freq_corrected_strobe                  ),
-    .freq_corrected_start    ( freq_corrected_start                   )
-);
-
+/////////////////////////
+wire                 freq_corrected_start    =  signal_valid_start      ;
+wire                 freq_corrected_envelope =  symbol_aligned_envelope ;
+wire [LPF_WIDTH-1:0] freq_corrected_i        =  symbol_aligned_i        ;
+wire [LPF_WIDTH-1:0] freq_corrected_q        =  symbol_aligned_q        ;
+wire                 freq_corrected_strobe   =  symbol_aligned_strobe   ;
+////////////////////////
 
 // 第四步, 根据已知前导码, 在窗口内求和找到前导码的边界, 输出的第一个数据是KNOWN_SEQUENCE_END_SYMBOL下一个索引
 wire preamble_aligned_start                 ;
-wire [2*LPF_WIDTH-1:0] preamble_aligned_data;
+wire [2*LPF_WIDTH:0] preamble_aligned_data  ;
 wire preamble_aligned_probe                 ;
+wire [LPF_WIDTH-1:0] preamble_aligned_i     ;
+wire [LPF_WIDTH-1:0] preamble_aligned_q     ;
+wire preamble_aligned_envelope              ;
+assign preamble_aligned_i = preamble_aligned_data[LPF_WIDTH-1:0];
+assign preamble_aligned_q = preamble_aligned_data[2*LPF_WIDTH-1:LPF_WIDTH];
+assign preamble_aligned_envelope = preamble_aligned_data[2*LPF_WIDTH];
 link11_slew_step4 #(
     .LPF_WIDTH               ( LPF_WIDTH               ),
     .WINDOW_NUM              ( WINDOW_NUM              ),
     .FIND_SERIES_START_INDEX ( FIND_SERIES_START_INDEX ),
     .SYMBOL_NUMS_TO_FIND     ( SYMBOL_NUMS_TO_FIND     ),
-    .PREAMBLE_SYMBOL_NUM     ( 192                     ))
+    .PREAMBLE_SYMBOL_NUM     ( 192     ))
  u_link11_slew_step4 (
-    .clk                     ( clk                                       ),
-    .rst_n                   ( rst_n                                     ),
-    .freq_corrected_start    ( freq_corrected_start                      ),
-    .freq_corrected_i        ( freq_corrected_i        [LPF_WIDTH-1:0]   ),
-    .freq_corrected_q        ( freq_corrected_q        [LPF_WIDTH-1:0]   ),
-    .freq_corrected_strobe   ( freq_corrected_strobe                     ),
+    .clk                      ( clk                                      ),
+    .rst_n                    ( rst_n                                    ),
+    .freq_corrected_start     ( freq_corrected_start                     ),
+    .freq_corrected_envelope  ( freq_corrected_envelope                  ),
+    .freq_corrected_i         ( freq_corrected_i         [LPF_WIDTH-1:0] ),
+    .freq_corrected_q         ( freq_corrected_q         [LPF_WIDTH-1:0] ),
+    .freq_corrected_strobe    ( freq_corrected_strobe                    ),
 
-    .preamble_aligned_start  ( preamble_aligned_start                    ),
-    .preamble_aligned_data   ( preamble_aligned_data   [2*LPF_WIDTH-1:0] ),
-    .preamble_aligned_probe  ( preamble_aligned_probe                    )
+    .preamble_aligned_start   ( preamble_aligned_start                   ),
+    .preamble_aligned_data    ( preamble_aligned_data    [2*LPF_WIDTH:0] ),
+    .preamble_aligned_probe   ( preamble_aligned_probe                   )
 );
-// 第五步, 前导码训练均衡器
-localparam EQ_WIDTH = 2*(LPF_WIDTH+$clog2(WINDOW_NUM));
-wire [EQ_WIDTH-1:0] equalized_i;
-wire [EQ_WIDTH-1:0] equalized_q;
-wire equalized_strobe;
-wire equalized_start;
+
+// 第五步, 频偏校正
+localparam DEMOD_DATA_WIDTH = 2*(LPF_WIDTH+$clog2(WINDOW_NUM));
+
 wire data_for_demod_start ;
 wire data_for_demod_strobe;
-wire [EQ_WIDTH-1:0] data_for_demod_i;
-wire [EQ_WIDTH-1:0] data_for_demod_q;
-assign equalized_i      = data_for_demod_i;
-assign equalized_q      = data_for_demod_q;
-assign equalized_strobe = data_for_demod_strobe;
-assign equalized_start  = data_for_demod_start;
+wire [DEMOD_DATA_WIDTH-1:0] data_for_demod_i;
+wire [DEMOD_DATA_WIDTH-1:0] data_for_demod_q;
+wire envelope_for_demod;
 link11_slew_step5 #(
     .LPF_WIDTH                 ( LPF_WIDTH                 ),
     .WINDOW_NUM                ( WINDOW_NUM                ),
     .KNOWN_SEQUENCE_END_SYMBOL ( KNOWN_SEQUENCE_END_SYMBOL ))
  u_link11_slew_step5 (
-    .clk                     ( clk                                                            ),
-    .rst_n                   ( rst_n                                                          ),
-    .preamble_aligned_start  ( preamble_aligned_start                                         ),
-    .preamble_aligned_data   ( preamble_aligned_data   [2*LPF_WIDTH-1:0]                      ),
-    .preamble_aligned_probe  ( preamble_aligned_probe                                         ),
+    .clk                        ( clk                                                               ),
+    .rst_n                      ( rst_n                                                             ),
+    .preamble_aligned_envelope  ( preamble_aligned_envelope                                         ),
+    .preamble_aligned_start     ( preamble_aligned_start                                            ),
+    .preamble_aligned_i         ( preamble_aligned_i         [LPF_WIDTH-1:0]                        ),
+    .preamble_aligned_q         ( preamble_aligned_q         [LPF_WIDTH-1:0]                        ),
+    .preamble_aligned_probe     ( preamble_aligned_probe                                            ),
 
-    .data_for_demod_start    ( data_for_demod_start                                           ),
-    .data_for_demod_strobe   ( data_for_demod_strobe                                          ),
-    .data_for_demod_i        ( data_for_demod_i        [2*(LPF_WIDTH+$clog2(WINDOW_NUM))-1:0] ),
-    .data_for_demod_q        ( data_for_demod_q        [2*(LPF_WIDTH+$clog2(WINDOW_NUM))-1:0] )
+    .data_for_demod_start       ( data_for_demod_start                                              ),
+    .data_for_demod_strobe      ( data_for_demod_strobe                                             ),
+    .data_for_demod_i           ( data_for_demod_i           [2*(LPF_WIDTH+$clog2(WINDOW_NUM))-1:0] ),
+    .data_for_demod_q           ( data_for_demod_q           [2*(LPF_WIDTH+$clog2(WINDOW_NUM))-1:0] ),
+    .envelope_for_demod         ( envelope_for_demod                                                )
 );
 
 // 第六步, 根据需要解调的IQ信号, 以及本地产生的加扰信号, 反推出加扰前的信号, 再经过QPSK解调, 得到dibit
-wire [1:0] dibit;
-wire dibit_strobe;
-wire mixer_mag_envelope;
+localparam EQ_WIDTH = 2*(LPF_WIDTH+$clog2(WINDOW_NUM));
+
+wire [1:0] dibit                ;
+wire dibit_strobe               ;
+wire [EQ_WIDTH-1:0] equalized_i ;
+wire [EQ_WIDTH-1:0] equalized_q ;
+wire equalized_strobe           ;
+wire equalized_start            ;
+
+assign equalized_i      = data_for_demod_i[DEMOD_DATA_WIDTH-1-:EQ_WIDTH];
+assign equalized_q      = data_for_demod_q[DEMOD_DATA_WIDTH-1-:EQ_WIDTH];
+assign equalized_strobe = data_for_demod_strobe;
+assign equalized_start  = data_for_demod_start;
 link11_slew_step6 #(
     .EQ_WIDTH                  ( EQ_WIDTH                  ),
     .WINDOW_NUM                ( WINDOW_NUM                ),
@@ -168,15 +170,13 @@ link11_slew_step6 #(
  u_link11_slew_step6 (
     .clk                     ( clk                              ),
     .rst_n                   ( rst_n                            ),
-    .mixer_mag_thres         ( mixer_mag_thres                  ),
     .equalized_i             ( equalized_i       [EQ_WIDTH-1:0] ),
     .equalized_q             ( equalized_q       [EQ_WIDTH-1:0] ),
     .equalized_strobe        ( equalized_strobe                 ),
     .equalized_start         ( equalized_start                  ),
 
     .dibit                   ( dibit             [1:0]          ),
-    .dibit_strobe            ( dibit_strobe                     ),
-    .mixer_mag_envelope      ( mixer_mag_envelope               )
+    .dibit_strobe            ( dibit_strobe                     )
 );
 
 // 第七步, dibit数字域处理: 1解交织 2解卷积编码 3CRC验错
@@ -186,8 +186,8 @@ link11_slew_step7  u_link11_slew_step7 (
     .device_type             ( device_type                ),
     .dibit                   ( dibit               [1:0]  ),
     .dibit_strobe            ( dibit_strobe               ),
-    .equalized_start         ( equalized_start            ),
-    .mixer_mag_envelope      ( mixer_mag_envelope         ),
+    .equalized_start         ( data_for_demod_start            ),
+    .mixer_mag_envelope      ( envelope_for_demod           ),
 
     .viterbi_done            ( viterbi_done               ),
     .decoded_bits            ( decoded_bits        [59:0] ),
@@ -198,4 +198,56 @@ link11_slew_step7  u_link11_slew_step7 (
     .crc_check_strobe        ( crc_check_strobe           ),
     .demod_done              ( demod_done                 )
 );
+
+
+// 调试
+/////////////////////////////
+// reg [9:0] cnt_ila;
+// reg demoding = 0;
+// always @(posedge clk ) begin
+//     cnt_ila <= cnt_ila + 1;
+//     if(~rst_n) begin
+//         demoding <= 0;
+//     end else if(demod_done) begin
+//         demoding <= 0;
+//     end else if(signal_valid_start) begin
+//         demoding <= 1;
+//     end
+// end
+
+// ila_rx u_ila_rx(
+//         .clk(clk),
+//         .probe0(viterbi_done),          // 1
+//         .probe1(decoded_bits),          // 60
+//         .probe2(decoded_length),                // 6
+//         .probe3(best_start_state),              // 6
+//         .probe4(best_path_metric),              // 8
+//         .probe5(crc_check_pass),                // 1
+//         .probe6(crc_check_strobe),              // 1
+//         .probe7(signal_lpf_envelope_i),         // 16
+//         .probe8(signal_lpf_envelope_q),         // 16
+//         .probe9(envelope_for_demod),            // 1
+//         .probe10(demod_done),           // 1
+//         .probe11(symbol_aligned_i),             // 16
+//         .probe12(symbol_aligned_q),             // 16
+//         .probe13(symbol_aligned_strobe),                // 1
+//         .probe14(signal_valid_start),           // 1
+//         .probe15(signal_if_i),             // 16
+//         .probe16(signal_if_q),             // 16
+//         .probe17(envelope),                // 1
+//         .probe18(demoding),         // 1
+//         .probe19(preamble_aligned_start),               // 1
+//         .probe20(preamble_aligned_i),           // 16
+//         .probe21(preamble_aligned_q),           // 16
+//         .probe22(preamble_aligned_probe),               // 1
+//         .probe23(data_for_demod_start),         // 1
+//         .probe24(data_for_demod_strobe),                // 1
+//         .probe25(data_for_demod_i),             // 44
+//         .probe26(data_for_demod_q),             // 44
+//         .probe27(dibit),                // 2
+//         .probe28(dibit_strobe),         // 1
+//         .probe29(mixer_mag_envelope),            // 1
+//         .probe30(cnt_ila)              // 10
+// );
+/////////////////////////////
 endmodule

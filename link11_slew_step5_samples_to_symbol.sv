@@ -9,12 +9,14 @@ module link11_slew_step5_samples_to_symbol #(
 ) (
     input wire                  clk,
     input wire                  rst_n,
-    input wire                  preamble_aligned_start,
-    input wire [LPF_WIDTH-1:0]  preamble_aligned_data_i,
-    input wire [LPF_WIDTH-1:0]  preamble_aligned_data_q,
-    input wire                  preamble_aligned_probe,
-    output reg                  symbol_strobe,
-    output reg [SYMBOL_DATA_WIDTH-1:0] symbol_i, symbol_q
+    input wire                  preamble_aligned_envelope   ,
+    input wire                  preamble_aligned_start      ,
+    input wire [LPF_WIDTH-1:0]  preamble_aligned_i          ,
+    input wire [LPF_WIDTH-1:0]  preamble_aligned_q          ,
+    input wire                  preamble_aligned_probe      ,
+    output reg                  symbol_strobe               ,
+    output reg [SYMBOL_DATA_WIDTH-1:0] symbol_i, symbol_q   ,
+    output wire symbol_envelope
 );
     // 一个symbol内的累加器
 wire adder_out_strobe;
@@ -31,7 +33,7 @@ Adder_strobe #(
  u_Adder_sample_i (
     .clk                     ( clk                      ),
     .data_in_strobe          ( preamble_aligned_probe   ),
-    .A                       ( preamble_aligned_data_i  ),
+    .A                       ( preamble_aligned_i  ),
     .B                       ( adder_temp_i             ),
 
     .data_out_strobe         ( adder_out_strobe         ),
@@ -47,7 +49,7 @@ Adder_strobe #(
  u_Adder_sample_q (
     .clk                     ( clk                      ),
     .data_in_strobe          ( preamble_aligned_probe   ),
-    .A                       ( preamble_aligned_data_q  ),
+    .A                       ( preamble_aligned_q  ),
     .B                       ( adder_temp_q             ),
 
     .data_out_strobe         (                          ),
@@ -92,4 +94,15 @@ always @(posedge clk ) begin
         end
     end 
 end
+
+delay #(
+    .DATA_WIDTH ( 1 ),
+    .DELAY_CLK  ( ADDER_LATENCY + 2  ),
+    .IMPL_TYPE  ( 0  ))
+ u_delay (
+    .clk                     ( clk                          ),
+    .data_in                 ( preamble_aligned_envelope    ),
+
+    .data_out                ( symbol_envelope              )
+);
 endmodule

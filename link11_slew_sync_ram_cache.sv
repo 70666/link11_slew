@@ -7,20 +7,20 @@ module link11_slew_sync_ram_cache#(
     input wire clk,
     input wire rst_n,
     input wire                  data_in_strobe,
-    input wire [DATA_WIDTH-1:0] data_in_i, data_in_q,
+    input wire [DATA_WIDTH-1:0] data_in,
 
     input wire enb,
     input wire [$clog2(WRITE_DEPTH)-1:0] addrb,
     output reg [$clog2(WRITE_DEPTH)-1:0] addra,
-    output wire [2*DATA_WIDTH-1:0] doutb
+    output wire [DATA_WIDTH-1:0] doutb
 );
 
 
-localparam WRITE_WIDTH = 2*DATA_WIDTH;
+localparam WRITE_WIDTH = DATA_WIDTH;
 localparam READ_WIDTH  = WRITE_WIDTH;
 
 reg wea;
-reg [2*DATA_WIDTH-1:0] dina;
+reg [DATA_WIDTH-1:0] dina;
 
 always @(posedge clk ) begin
     if(~rst_n) begin
@@ -30,7 +30,7 @@ always @(posedge clk ) begin
     end else begin
         if(data_in_strobe) begin
             wea <= 1;
-            dina <= {data_in_q, data_in_i};
+            dina <= data_in;
             addra <= (addra >= WRITE_DEPTH - 1)? 0 : (addra + 1); 
         end else begin
             wea <= 0;

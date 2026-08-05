@@ -17,6 +17,7 @@ module freq_correction #(
     input wire symbol_start,                                // 复位标志, 每次消息只有一次, 是信号到来的开始标志
     input wire symbol_strobe,                               // 一个symbol只有一个采样点, 这个采样点是所有采样点的平均
     input wire [SYMBOL_DATA_WIDTH-1:0] symbol_i, symbol_q,  // 一个symbol内所有采样点的平均
+    input wire symbol_envelope,                             // symbol的包络, 和数据同时缓冲
     input wire [DEROT_DATA_WIDTH-1:0] preamble_derot_i,     // symbol使用mixer去掉了旋转的前导码, 比symbol落后几个时钟
     input wire [DEROT_DATA_WIDTH-1:0] preamble_derot_q,     // 理论上来说是一个只有频偏的直流分量, 不允许
     input wire preamble_derot_strobe,
@@ -24,10 +25,14 @@ module freq_correction #(
     output wire                    data_for_demod_start ,   // 给下个模块的复位标志
     output wire                    data_for_demod_strobe,   // 每个symbol一个strobe
     output wire [2*SYMBOL_DATA_WIDTH-1:0] data_for_demod_i, // 剔除掉频偏和初相的信号
-    output wire [2*SYMBOL_DATA_WIDTH-1:0] data_for_demod_q      
+    output wire [2*SYMBOL_DATA_WIDTH-1:0] data_for_demod_q, 
+    output wire envelope_for_demod        
 );
 
-localparam RAM_CACHE_DEPTH = 2*SYMBOL_INTERVAL + 3;         // 给予RAM一定裕量(3)
+localparam RAM_CACHE_DEPTH = 2*SYMBOL_INTERVAL + 7 + 10;    // 给予RAM一定裕量(10)
+localparam RAM_WRITE_WIDTH = 2*SYMBOL_DATA_WIDTH + 1;
+localparam MIXER_LATENCY = 7;
+localparam FREQ_CORRECT_LATENCY = 3*MIXER_LATENCY + 2;      // 从RAM输出到解调数据延时
 
 //  使用 前导码部分 自相关估计出频偏, 得到DDS校正信号
 wire        correcting  ;                   // 频偏校准波形生成中
@@ -51,26 +56,29 @@ freq_estimation #(
 );
 
 //  原始信号缓存, 给予频偏估计 操作时间
-wire [SYMBOL_DATA_WIDTH-1:0] ram_cache_out_i     ; // 缓存输出信号
-wire [SYMBOL_DATA_WIDTH-1:0] ram_cache_out_q     ;
+wire [RAM_WRITE_WIDTH-1:0] ram_cache_out    ;
+wire [SYMBOL_DATA_WIDTH-1:0] ram_cache_out_i; // 缓存输出信号
+wire [SYMBOL_DATA_WIDTH-1:0] ram_cache_out_q;
+wire ram_cache_out_envelope                 ;
 wire                  ram_cache_out_strobe;
+wire [RAM_WRITE_WIDTH-1:0] symbol = {symbol_envelope, symbol_q, symbol_i};
+assign ram_cache_out_i = ram_cache_out[SYMBOL_DATA_WIDTH-1:0];
+assign ram_cache_out_q = ram_cache_out[2*SYMBOL_DATA_WIDTH-1:SYMBOL_DATA_WIDTH];
+assign ram_cache_out_envelope = ram_cache_out[2*SYMBOL_DATA_WIDTH];
 ram_cache #(
-    .RAM_CACHE_DEPTH   ( RAM_CACHE_DEPTH   ),
-    .SYMBOL_DATA_WIDTH ( SYMBOL_DATA_WIDTH ))
+    .RAM_CACHE_DEPTH ( RAM_CACHE_DEPTH ),
+    .RAM_WRITE_WIDTH ( RAM_WRITE_WIDTH ))
  u_ram_cache (
-    .clk                     ( clk                                           ),
-    .rst_n                   ( rst_n                                         ),
-    .symbol_start            ( symbol_start                                  ),
-    .correcting              ( correcting                                    ),
-    .symbol_i                ( symbol_i              [SYMBOL_DATA_WIDTH-1:0] ),
-    .symbol_q                ( symbol_q              [SYMBOL_DATA_WIDTH-1:0] ),
-    .symbol_strobe           ( symbol_strobe                                 ),
+    .clk                     ( clk                                         ),
+    .rst_n                   ( rst_n                                       ),
+    .symbol_start            ( symbol_start                                ),
+    .correcting              ( correcting                                  ),
+    .symbol                  ( symbol                [RAM_WRITE_WIDTH-1:0] ),
+    .symbol_strobe           ( symbol_strobe                               ),
 
-    .ram_cache_out_i         ( ram_cache_out_i       [SYMBOL_DATA_WIDTH-1:0] ),
-    .ram_cache_out_q         ( ram_cache_out_q       [SYMBOL_DATA_WIDTH-1:0] ),
-    .ram_cache_out_strobe    ( ram_cache_out_strobe                          )
+    .ram_cache_out           ( ram_cache_out         [RAM_WRITE_WIDTH-1:0] ),
+    .ram_cache_out_strobe    ( ram_cache_out_strobe                        )
 );
-
 //  混频校正
 wire                         freq_corrected_strobe;
 wire [SYMBOL_DATA_WIDTH-1:0] freq_corrected_i     ;    // 频偏校正后信号
@@ -109,5 +117,16 @@ init_phase_correct #(
     .data_for_demod_strobe      ( data_for_demod_strobe                                ),
     .data_for_demod_i           ( data_for_demod_i           [2*SYMBOL_DATA_WIDTH-1:0] ),
     .data_for_demod_q           ( data_for_demod_q           [2*SYMBOL_DATA_WIDTH-1:0] )
+);
+
+delay #(
+    .DATA_WIDTH ( 1 ),
+    .DELAY_CLK  ( FREQ_CORRECT_LATENCY ),
+    .IMPL_TYPE  ( 0  ))
+ u_delay (
+    .clk        ( clk                      ),
+    .data_in    ( ram_cache_out_envelope   ),
+
+    .data_out   ( envelope_for_demod       )
 );
 endmodule

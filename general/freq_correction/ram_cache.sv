@@ -3,20 +3,20 @@
 */
 module ram_cache #(
     parameter RAM_CACHE_DEPTH = 16,
-    parameter SYMBOL_DATA_WIDTH = 16
+    parameter RAM_WRITE_WIDTH = 16
 ) (
     input wire clk,
     input wire rst_n,
     input wire symbol_start,
     input wire correcting,
-    input wire [SYMBOL_DATA_WIDTH-1:0] symbol_i, symbol_q,
+    input wire [RAM_WRITE_WIDTH-1:0] symbol,
     input wire symbol_strobe,
 
-    output wire [SYMBOL_DATA_WIDTH-1:0] ram_cache_out_i, ram_cache_out_q,
+    output wire [RAM_WRITE_WIDTH-1:0] ram_cache_out,
     output wire ram_cache_out_strobe
 );
     
-localparam WRITE_WIDTH = 2*SYMBOL_DATA_WIDTH;
+localparam WRITE_WIDTH = RAM_WRITE_WIDTH;
 localparam WRITE_DEPTH = RAM_CACHE_DEPTH;
 localparam READ_WIDTH = WRITE_WIDTH;
 localparam RAM_LATENCY = 1;                 
@@ -31,8 +31,8 @@ reg [ADDR_WIDTH-1:0] addra;
 reg enb;
 reg [ADDR_WIDTH-1:0] addrb;
 wire [READ_WIDTH-1:0] doutb;
-assign ram_cache_out_i = doutb[SYMBOL_DATA_WIDTH-1:0];
-assign ram_cache_out_q = doutb[2*SYMBOL_DATA_WIDTH-1:SYMBOL_DATA_WIDTH];
+assign ram_cache_out = doutb;
+
 
 
 always @(posedge clk ) begin
@@ -46,7 +46,7 @@ always @(posedge clk ) begin
             wea <= 0;
         end else begin          // 写状态
             wea <= symbol_strobe;
-            dina <= {symbol_q, symbol_i};
+            dina <= symbol;
             if(wea) begin
                 if(addra < WRITE_DEPTH - 1) begin
                     addra <= addra + 1;

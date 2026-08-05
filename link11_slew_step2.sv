@@ -14,10 +14,11 @@ module link11_slew_step2 #(
     input wire signal_lpf_envelope_strobe, 
     output wire [LPF_WIDTH-1:0] symbol_aligned_i, symbol_aligned_q,
     output wire symbol_aligned_strobe,
-    output reg signal_valid_start
+    output wire signal_valid_start,
+    output wire symbol_aligned_envelope
 );
     
-localparam SEARCH_LENGTH = 2 * WINDOW_NUM;  // 即使第一个symbol不完整依然可以找到
+localparam SEARCH_LENGTH = 3 * WINDOW_NUM;  // 即使第一个symbol不完整依然可以找到
 localparam WRITE_DEPTH = SEARCH_LENGTH + SEARCH_LENGTH / 4;
 
 localparam SUM_WIDTH = LPF_WIDTH + $clog2(WINDOW_NUM);
@@ -70,18 +71,18 @@ square_sum_strobe #(
 reg enb;
 reg [$clog2(WRITE_DEPTH)-1:0] addrb;
 wire [$clog2(WRITE_DEPTH)-1:0] addra;
-wire [2*LPF_WIDTH-1:0] doutb; 
+wire [2*LPF_WIDTH:0] doutb; 
+wire [2*LPF_WIDTH:0] ram_data_in = {envelope, signal_lpf_envelope_q, signal_lpf_envelope_i}; 
 link11_slew_sync_ram_cache #(
     .WINDOW_NUM  ( WINDOW_NUM  ),
     .RAM_LATENCY ( RAM_LATENCY ),
-    .DATA_WIDTH  ( LPF_WIDTH    ),
+    .DATA_WIDTH  ( 2*LPF_WIDTH + 1    ),
     .WRITE_DEPTH ( WRITE_DEPTH ))
  u_link11_slew_sync_ram_cache (
     .clk                     ( clk                          ),
     .rst_n                   ( rst_n                        ),
     .data_in_strobe          ( signal_lpf_envelope_strobe   ),
-    .data_in_i               ( signal_lpf_envelope_i        ),
-    .data_in_q               ( signal_lpf_envelope_q        ),
+    .data_in                 ( ram_data_in                  ),
     .enb                     ( enb                          ),
     .addrb                   ( addrb                        ),
 
@@ -112,7 +113,6 @@ link11_slew_step2_peak_finder #(
     .ADDRA_WIDTH   ( ADDRA_WIDTH   ),
     .SUM_WIDTH     ( SQUARE_SUM_WIDTH     ),
     .RAM_LATENCY   ( RAM_LATENCY   ),
-    .DATA_WIDTH    ( LPF_WIDTH    ),
     .SEARCH_LENGTH ( SEARCH_LENGTH ),
     .WRITE_DEPTH   ( WRITE_DEPTH   ))
  u_link11_slew_step2_peak_finder (
@@ -123,20 +123,25 @@ link11_slew_step2_peak_finder #(
     .sum_mag_probe           ( sum_mag_probe            ),
     .sum_mag                 ( square_sum               ),
     .sum_mag_index           ( sum_mag_index            ),
-    .doutb                   ( doutb                    ),
 
     .enb                     ( enb                      ),
     .addrb                   ( addrb                    ),
-    .signal_valid_start      ( signal_valid_start       ),
-    .symbol_aligned_strobe   ( symbol_aligned_strobe    ),
-    .symbol_aligned_i        ( symbol_aligned_i         ),
-    .symbol_aligned_q        ( symbol_aligned_q         )
+    .signal_valid_start      ( signal_valid_start       )
 );
 
      
-     
+delay #(
+    .DATA_WIDTH ( 1             ),
+    .DELAY_CLK  ( RAM_LATENCY   ),
+    .IMPL_TYPE  ( 0             ))
+ u_delay_demod_data_strobe (
+    .clk                     ( clk                  ),
+    .data_in                 ( enb    ),
 
+    .data_out                ( symbol_aligned_strobe   )
+);
 
-
-
+assign symbol_aligned_i = doutb[LPF_WIDTH-1:0];
+assign symbol_aligned_q = doutb[2*LPF_WIDTH-1:LPF_WIDTH];
+assign symbol_aligned_envelope = doutb[2*LPF_WIDTH];
 endmodule

@@ -43,6 +43,8 @@ always @(posedge clk ) begin
     end else if(crc_out_strobe_datablock) begin
         crc_check_pass <= crc_valid_datablock;
         crc_check_strobe <= crc_out_strobe_datablock;
+    end else begin
+        crc_check_strobe <= 0;
     end
 end
 

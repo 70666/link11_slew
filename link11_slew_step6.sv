@@ -5,13 +5,12 @@ module link11_slew_step6 #(
 ) (
     input wire clk,
     input wire rst_n,
-    input wire [EQ_WIDTH+15:0] mixer_mag_thres,
     input wire [EQ_WIDTH-1:0] equalized_i, equalized_q,   
     input wire equalized_strobe,
     input wire equalized_start,
+    
     output wire [1:0] dibit,
-    output wire dibit_strobe,
-    output reg mixer_mag_envelope
+    output wire dibit_strobe
 );
     
     // 1.取采样点, 求一个窗口内的平均, 需要start信号来对齐
@@ -75,27 +74,4 @@ module link11_slew_step6 #(
         .decode_strobe           ( dibit_strobe     )
     );
 
-    // 5.平方和用来保底检测信号结束
-    wire [MIXER_OUT_WIDTH-1:0] mag_mixer;
-    complex_to_mag #(
-        .DATA_WIDTH ( MIXER_OUT_WIDTH ))
-    u_complex_to_mag (
-        .clk                     ( clk              ),
-        .enable                  ( 1'b1             ),
-        .reset                   ( 1'b0             ),
-        .i                       ( mixer_i          ),
-        .q                       ( mixer_q          ),
-        .in_strobe               ( mixer_strobe     ),
-
-        .mag                     ( mag_mixer        ),
-        .mag_stb                 ( mag_mixer_strobe )
-    );
-
-    always @(posedge clk ) begin
-        if(~rst_n) begin
-            mixer_mag_envelope <= 0;
-        end else if(mag_mixer_strobe) begin
-            mixer_mag_envelope <= mag_mixer >= mixer_mag_thres;   
-        end
-    end
 endmodule

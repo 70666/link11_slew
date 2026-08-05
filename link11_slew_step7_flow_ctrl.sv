@@ -33,7 +33,7 @@ assign ones_count = $countones(deinterleaved_bits);
 
 // 包络计数, 在没有EOM段的时候, 用来给demod_done保底
 reg [2:0] cnt_envelope_low = 0;
-reg counting = 0;
+reg demoding = 0;
 always @(posedge clk ) begin
     if(equalized_start) begin
         cnt_envelope_low <= 0;
@@ -44,9 +44,9 @@ always @(posedge clk ) begin
             cnt_envelope_low <= 0;
     end
     if(equalized_start) begin
-        counting <= 1;
+        demoding <= 1;
     end else if(demod_done) begin
-        counting <= 0;
+        demoding <= 0;
     end
 end
 
@@ -61,7 +61,7 @@ assign eom_block_found = (cnt_envelope_low >= 4) || deinterleaved_strobe_pipe &&
 always @(posedge clk ) begin
     if(~rst_n) begin
         demod_done <= 0;
-    end else if(eom_block_found) begin
+    end else if(eom_block_found && demoding) begin   // 确保复位不会太频繁
         demod_done <= 1;
     end else begin
         demod_done <= 0;
@@ -71,9 +71,9 @@ end
 always @(posedge clk ) begin
     if(~rst_n) begin
         mode_data <= 0;
-    end else if(demod_done || equalized_start) begin    // 完成后
+    end else if(equalized_start) begin  // 开始第一帧
         mode_data <= 0;
-    end else if(viterbi_done) begin                     // 数据区
+    end else if(viterbi_done) begin     // 数据区
         mode_data <= 1;
     end
 end

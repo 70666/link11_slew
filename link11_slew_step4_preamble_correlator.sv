@@ -39,7 +39,7 @@ generate
     end
 endgenerate
 
-
+wire candidate_strobe;
 
 integer i;
 reg [LPF_WIDTH-1:0] symbol_i_d [SYMBOL_NUMS_TO_FIND-1:0];
@@ -62,9 +62,8 @@ endgenerate
 
 
 reg [$clog2(PREAMBLE_SYMBOL_NUM+1)-1:0] received_symbol_num;
-wire candidate_strobe;
 
-// 第3个symbol开始, 每个平均值产生一个连续三symbol相关结果.
+
 assign candidate_strobe =
     symbol_average_strobe &&
     (received_symbol_num >= SYMBOL_NUMS_TO_FIND - 1);

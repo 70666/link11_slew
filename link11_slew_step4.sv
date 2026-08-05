@@ -10,11 +10,12 @@ module link11_slew_step4 #(
     input wire clk,
     input wire rst_n,
     input wire freq_corrected_start,
+    input wire freq_corrected_envelope,
     input wire [LPF_WIDTH-1:0] freq_corrected_i,
     input wire [LPF_WIDTH-1:0] freq_corrected_q,
     input wire freq_corrected_strobe,
     output wire preamble_aligned_start,
-    output wire [2*LPF_WIDTH-1:0] preamble_aligned_data,
+    output wire [2*LPF_WIDTH:0] preamble_aligned_data,
     output wire preamble_aligned_probe
 );
 
@@ -90,12 +91,12 @@ link11_slew_step4_peak_search #(
 
 // 输出的已知边界粗频偏校准后信号
 wire cache_read_data_strobe;                    // doutb 有效
-wire [2*LPF_WIDTH-1:0] cache_read_data;         // ram doutb  
+wire [2*LPF_WIDTH:0] cache_read_data;           // ram doutb  
 assign preamble_aligned_data = cache_read_data;
 assign preamble_aligned_probe = cache_read_data_strobe;
 // 对粗频偏校准信号进行缓存
 link11_slew_step4_ram_cache #(
-    .DATA_WIDTH        ( 2*LPF_WIDTH        ),
+    .DATA_WIDTH        ( 2*LPF_WIDTH+1        ),
     .CACHE_DEPTH       ( CACHE_DEPTH       ),
     .CACHE_RAM_LATENCY ( CACHE_RAM_LATENCY ),
     .CACHE_ADDR_WIDTH  ( CACHE_ADDR_WIDTH  ))
@@ -104,11 +105,11 @@ link11_slew_step4_ram_cache #(
     .rst_n                   ( rst_n                                          ),
     .freq_corrected_start    ( freq_corrected_start                           ),
     .data_in_strobe          ( freq_corrected_strobe                          ),
-    .data_in                 ( {freq_corrected_q, freq_corrected_i}           ),
+    .data_in                 ( {freq_corrected_envelope, freq_corrected_q, freq_corrected_i}           ),
     .cache_read_enable       ( cache_read_enable                              ),
     .cache_read_addr         ( cache_read_addr         [CACHE_ADDR_WIDTH-1:0] ),
 
-    .cache_read_data         ( cache_read_data    [2*LPF_WIDTH-1:0]           ),
+    .cache_read_data         ( cache_read_data    [2*LPF_WIDTH:0]           ),
     .cache_read_data_strobe  ( cache_read_data_strobe                         )
 );
 
