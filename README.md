@@ -28,6 +28,18 @@ The receive architecture was developed through two months of Codex-assisted desi
 - Parameterized sample ratio and data widths, with latency-aware reusable arithmetic modules.
 - A Tcl script that reconstructs the Vivado project and required Xilinx IP.
 
+## Hardware validation
+
+The complete transmit-to-receive loopback has passed on an AMD/Xilinx ZU47DR in the maintainer's current lab setup. For the validated test vectors:
+
+- The transmitter waveform was received and decoded end to end on hardware.
+- The recovered coded/interleaved stream had zero observed bit errors.
+- The reported Viterbi best-path metric remained `0`, consistent with an error-free coded stream.
+
+This result is the product of two months of engineer-Codex co-design, followed by simulation, repeated on-board measurements, timing alignment, and architecture optimization. It exceeded the protocol-performance target in the tested loopback case. It is not presented as a general state-of-the-art claim until standardized impaired-channel sweeps, comparable baselines, and independent reproduction are available.
+
+The zero-error result also means that interleaving and Viterbi error correction were not exercised by this clean loopback. Those protocol features remain necessary for channels with noise, fading, interference, or burst errors.
+
 ## Architecture
 
 ```text
