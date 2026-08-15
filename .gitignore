@@ -18,6 +18,8 @@
 !SECURITY.md
 !docs/module.md
 !docs/codex-for-oss-application.md
+!docs/images/
+!docs/images/*.png
 
 # 可复现 Vivado 工程脚本。
 !scripts/

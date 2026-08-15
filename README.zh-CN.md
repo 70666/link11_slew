@@ -113,6 +113,26 @@ vivado build/link11_slew/link11_slew.xpr
 
 `simulate/link11_slew_simulate.sv` 连接仿真发送机和接收机, 可配置载波频偏, 噪声, 多径, symbol 采样数和 data block 数量.
 
+### 接收链路代表性波形
+
+以下 Vivado 波形来自一次具有代表性的端到端仿真, 用于展示接收链路内部信号和实际调试过程. 它们属于实现与调试证据, 不等同于独立的标准一致性测试. 图片保留了截图中的原始波形和数值, 未对结果进行修改.
+
+**1. 中频输入与零中频变换.** 1,800 Hz 中频 I/Q 输入经下变频后, 得到接收流水线使用的同步零中频 I/Q 信号.
+
+![中频输入与零中频变换](docs/images/simulation-01-if-to-zero-if.png)
+
+**2. 零中频包络与滑窗能量.** 滤波后的零中频 I/Q 包络进入累积能量计算, 为后续捕获处理提供依据.
+
+![零中频包络与滑窗能量](docs/images/simulation-02-envelope-energy.png)
+
+**3. Symbol 对齐与前导码捕获.** 对齐后的 I/Q 样本进入前导码相关器, 通过相关值, 积分值和峰值度量确定块对齐位置.
+
+![Symbol 对齐与前导码捕获](docs/images/simulation-03-symbol-preamble-alignment.png)
+
+**4. 基于前导码的相位校正.** 已对齐的前导码驱动基于 DDS 的相位校正, 生成频偏校正后的 I/Q 样本以及送入解调级的数据流.
+
+![基于前导码的相位校正](docs/images/simulation-04-phase-frequency-correction.png)
+
 生成工程后运行 behavioral simulation, 重点观察 `crc_check_strobe`, `crc_check_pass` 和 `decoded_bits`. 当前仿真用于开发验证, 不是独立标准一致性测试套件.
 
 ## 参与贡献

@@ -145,6 +145,26 @@ Load header index `0` and data block indices `1..15` through `raw_data_valid`, t
 
 `simulate/link11_slew_simulate.sv` connects the simulation transmitter and receiver. Its parameters cover carrier-frequency offset, noise, multipath, symbol sampling, and data-block count.
 
+### Representative receive-chain waveforms
+
+The following Vivado waveform captures document internal signals from one representative end-to-end simulation run. They are included as implementation and debugging evidence rather than as an independent conformance benchmark. The images are preserved without altering the displayed waveforms or values.
+
+**1. IF input and zero-IF conversion.** The 1,800 Hz intermediate-frequency I/Q input is mixed down to the synchronized zero-IF I/Q signals used by the receive pipeline.
+
+![IF input and zero-IF conversion](docs/images/simulation-01-if-to-zero-if.png)
+
+**2. Zero-IF envelope and sliding-window energy.** The filtered zero-IF I/Q envelopes feed the accumulated energy calculation used by the acquisition stages.
+
+![Zero-IF envelope and sliding-window energy](docs/images/simulation-02-envelope-energy.png)
+
+**3. Symbol alignment and preamble acquisition.** Aligned I/Q samples are evaluated by the preamble correlator; the correlation and integrated peak metrics identify the block-alignment point.
+
+![Symbol alignment and preamble acquisition](docs/images/simulation-03-symbol-preamble-alignment.png)
+
+**4. Preamble-referenced phase correction.** The aligned preamble drives DDS-based phase correction, producing frequency-corrected I/Q samples and the data stream presented to the demodulation stage.
+
+![Preamble-referenced phase correction](docs/images/simulation-04-phase-frequency-correction.png)
+
 In Vivado:
 
 1. Run `scripts/create_project.tcl`.
