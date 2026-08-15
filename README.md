@@ -10,12 +10,15 @@ An open-source, synthesizable FPGA implementation of a Link 11 SLEW transmit and
 
 The design targets AMD/Xilinx Vivado and uses explicit strobe signals to process sample-rate data in a faster system clock domain. It is intended for interoperability research, protocol education, and reusable FPGA modem development.
 
+The receive architecture was developed through two months of Codex-assisted design, simulation, and repeated on-board FPGA tuning. It has completed end-to-end hardware debugging in the maintainer's test setup, but has not yet been independently reproduced.
+
 > [!IMPORTANT]
 > This is an independent research implementation. It has not been certified for standards conformance, operational deployment, safety-critical use, or security-critical use. Protocol standards and vendor IP are not redistributed by this repository.
 
 ## Highlights
 
 - Synthesizable transmit and receive data paths.
+- Receive data path iterated and verified through on-board FPGA testing.
 - 2,400 baud SLEW framing with a 192-symbol preamble and reinsertion probes.
 - Header and data CRC-12 generation/checking.
 - Tail-biting convolutional encoding and Viterbi decoding.

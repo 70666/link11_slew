@@ -21,11 +21,11 @@ Select `Codex Security` only if you have a concrete repository-security workflow
 
 ### English
 
-I am the primary maintainer of an open FPGA implementation of the Link 11 SLEW modem data path. It makes a specialized legacy interoperability protocol reproducible and inspectable for research and education, covering synthesis-ready TX/RX RTL, synchronization, frequency correction, channel coding, Viterbi decoding, CRC, simulation models, and a reproducible Vivado build. I actively maintain timing alignment, verification, documentation, and contributor review.
+I am the primary maintainer of this open Link 11 SLEW FPGA modem. FPGA verification requires costly boards, long build cycles, and lab debugging. Over two months, I used Codex to explore an unfamiliar demodulation architecture, then implemented, tuned, and verified it on hardware. Publishing the resulting TX/RX RTL, timing knowledge, simulation models, and reproducible Vivado flow helps others avoid repeating expensive experiments in a niche with few open implementations.
 
 ### 中文参考
 
-我是该项目的主要维护者. 项目开源实现 Link 11 SLEW FPGA 调制解调数据链路, 为专用传统互操作协议提供可复现, 可审查的研究与教学实现. 仓库包含可综合 TX/RX RTL, 同步, 频偏校正, 信道编码, Viterbi 译码, CRC, 信道仿真和可复现 Vivado 构建. 我持续负责延时对齐, 验证, 文档和贡献审核.
+我是这个 Link 11 SLEW FPGA 调制解调器的主要维护者. FPGA 验证需要昂贵的硬件, 很长的构建周期和实验室调试. 两个月来, 我使用 Codex 探索不熟悉的解调架构, 再亲自实现, 调优并上板验证. 公开 TX/RX RTL, 延时知识, 信道仿真和可复现 Vivado 流程, 可以帮助其他工程师避免在公开实现稀缺的方向重复昂贵试验.
 
 ## How will you use API credits for your project?
 
@@ -41,11 +41,11 @@ I will use API credits for maintainer automation: reviewing RTL pull requests fo
 
 ### English
 
-The project is intentionally source-first: proprietary standards and generated vendor artifacts are excluded, while a Tcl flow recreates required Xilinx IP. Codex would reduce the unusually high review cost of HDL changes, where a one-cycle strobe mismatch can silently corrupt an otherwise correct algorithm. Support would help me add self-checking vectors, CI-friendly verification, issue triage, and contributor guidance for a niche area with limited open implementations.
+Codex is often perceived as a software-only tool, so many hardware and FPGA engineers underuse it despite exceptionally high debugging costs. This project demonstrates a rigorous human-Codex workflow: architecture discussion, RTL implementation, simulation, on-board testing, measurement-driven optimization, and repeated review. Support would help turn two months of lab-tested knowledge into self-checking vectors, maintainable releases, and practical guidance for the wider FPGA community.
 
 ### 中文参考
 
-项目坚持 source-first: 不分发受版权保护的标准和厂商生成文件, 使用 Tcl 重建所需 Xilinx IP. HDL 修改的审核成本很高, 一拍 strobe 错位就可能让正确算法静默出错. Codex 支持将帮助我增加自检向量, CI 友好验证, Issue 分类和贡献者指南, 改善这个公开实现较少的专用方向.
+Codex 常被认为只适合软件工程师, 因此许多硬件和 FPGA 工程师低估了它, 但硬件调试成本尤其高. 这个项目展示了严格的人机协作闭环: 架构讨论, RTL 实现, 仿真, 上板测试, 测量驱动优化和反复审核. 支持将帮助我把两个月的实验室验证知识转化为自检向量, 可维护版本和面向更广泛 FPGA 社区的实践指南.
 
 ## Evidence to add before submission
 
