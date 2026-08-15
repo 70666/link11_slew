@@ -133,6 +133,10 @@ vivado build/link11_slew/link11_slew.xpr
 
 ![基于前导码的相位校正](docs/images/simulation-04-phase-frequency-correction.png)
 
+**5. 受损信道下的端到端数字结果.** 在 `15 Hz` 载波频偏和主动注入的高斯白噪声干扰下, 接收机仍然完整恢复出发送的 `0x123456789ABC` PAYLOAD. 注入噪声高于目标实际工作环境的预期水平. 本次仿真中, 波形显示每个完成的数据块均有 `crc_check_pass = 1`, 且 Viterbi best-path metric 为 `0`.
+
+![载波频偏和高斯白噪声下恢复出的 PAYLOAD](docs/images/simulation-05-decoded-payload.png)
+
 生成工程后运行 behavioral simulation, 重点观察 `crc_check_strobe`, `crc_check_pass` 和 `decoded_bits`. 当前仿真用于开发验证, 不是独立标准一致性测试套件.
 
 ## 参与贡献

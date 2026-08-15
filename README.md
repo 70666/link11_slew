@@ -165,6 +165,10 @@ The following Vivado waveform captures document internal signals from one repres
 
 ![Preamble-referenced phase correction](docs/images/simulation-04-phase-frequency-correction.png)
 
+**5. End-to-end decoded result under an impaired channel.** With a `15 Hz` carrier-frequency offset and deliberately injected Gaussian white noise above the level expected in the target operating environment, the receiver recovered the transmitted `0x123456789ABC` payload exactly. The waveform shows `crc_check_pass = 1` and a Viterbi best-path metric of `0` for each completed block in this run.
+
+![Decoded payload under carrier offset and Gaussian white noise](docs/images/simulation-05-decoded-payload.png)
+
 In Vivado:
 
 1. Run `scripts/create_project.tcl`.
