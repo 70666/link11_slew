@@ -31,11 +31,11 @@ I am the primary maintainer of this open Link 11 SLEW FPGA modem. FPGA verificat
 
 ### English
 
-I will use API credits for maintainer automation: reviewing RTL pull requests for data/control latency mismatches, generating focused SystemVerilog testbenches, triaging simulation failures, checking parameterized widths and signed truncation, improving module documentation, and preparing release notes. Human review and Vivado simulation/synthesis will remain required before changes merge, especially for protocol behavior and timing-sensitive pipelines.
+I will use API credits to build maintainer workflows for latency-sensitive HDL: reviewing pull requests for data/strobe alignment, generating self-checking SystemVerilog tests, triaging simulation and hardware discrepancies, auditing signed widths, and documenting reproducible lab results. Every change will still require human review, Vivado simulation/synthesis, and on-board validation. This will demonstrate a practical Codex workflow for hardware teams, not only software projects.
 
 ### 中文参考
 
-我会将 API credits 用于维护自动化: 审查 RTL Pull Request 中的数据和控制延时错位, 生成针对性 SystemVerilog testbench, 分析仿真失败, 检查参数化位宽和有符号截位, 完善模块文档和生成发布说明. 合并前仍要求人工审核及 Vivado 仿真/综合, 尤其关注协议行为和延时敏感流水线.
+我会使用 API credits 建设延时敏感 HDL 的维护工作流: 审核 Pull Request 的数据/strobe 对齐, 生成自检 SystemVerilog testbench, 分析仿真与硬件差异, 审核有符号位宽并记录可复现实验结果. 每项修改仍需人工审核, Vivado 仿真/综合和上板验证. 这将展示不局限于软件项目的硬件团队 Codex 实践工作流.
 
 ## Anything else we should know?
 
