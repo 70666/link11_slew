@@ -6,7 +6,11 @@
 
 [简体中文](README.zh-CN.md)
 
-An open-source, synthesizable FPGA implementation of a Link 11 SLEW transmit and receive chain. The repository focuses on the modem data path: framing, channel coding, scrambling, waveform generation, synchronization, frequency correction, demodulation, Viterbi decoding, and CRC verification.
+> **Codex can build more than software.** If AI-assisted engineering still means software development to you, this repository demonstrates another path: engineer-led, AI-assisted FPGA architecture, latency-sensitive RTL, and real hardware validation.
+
+An open-source, synthesizable FPGA implementation of a Link 11 SLEW transmit and receive chain, co-designed with ChatGPT 5.5 and Codex. AI assistance contributed to system-level architecture exploration, an unfamiliar demodulation design, complex RTL implementation, simulation analysis, and iterative debugging. The maintainer reviewed every design decision and verified the resulting modem through simulation and ZU47DR on-board testing.
+
+The repository focuses on the modem data path: framing, channel coding, scrambling, waveform generation, synchronization, frequency correction, demodulation, Viterbi decoding, and CRC verification.
 
 The design targets AMD/Xilinx Vivado and uses explicit strobe signals to process sample-rate data in a faster system clock domain. It is intended for interoperability research, protocol education, and reusable FPGA modem development.
 
