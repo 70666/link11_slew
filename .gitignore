@@ -1,16 +1,30 @@
-# 默认忽略全部文件, 仅放行 Verilog/SystemVerilog 源码和本排除文件。
+# 默认忽略全部文件, 仅放行开源工程所需的源码和文档。
 *
 
 # 允许 Git 继续遍历子目录, 否则子目录内的 .v/.sv 无法被发现。
 !*/
 
-# 只上传 Verilog/SystemVerilog 文件。
+# HDL 源码和头文件。
 !*.v
 !*.sv
+!*.vh
 
-
-# 保留本文件, 便于仓库共享同一套排除规则。
+# 开源项目元数据和文档。
 !.gitignore
+!README.md
+!README.zh-CN.md
+!LICENSE
+!CONTRIBUTING.md
+!SECURITY.md
+!docs/module.md
+!docs/codex-for-oss-application.md
 
-# 排除工程文件
+# 可复现 Vivado 工程脚本。
+!scripts/
+!scripts/*.tcl
+
+# 排除本地 Vivado 工程和受版权保护的协议资料。
 /link11_slew_project/**
+/docs/*.pdf
+/docs/*.docx
+/docs/*.png

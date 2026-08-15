@@ -1,0 +1,205 @@
+`ifndef PREAMBLE_IQ_WIRE_VH
+`define PREAMBLE_IQ_WIRE_VH
+// MSB
+// localparam [575:0] LINK11_SLEW_PREAMBLE_OCT = 576'o703411102615170354226122045412267070115426511747546661660410126274741550225513435062656200141666703455542615534754222566045456627430151422111307502665260050162274305150221157435026216200505266;
+// Define this table with LINK11_SLEW_PREAMBLE_IQ_WIRE_DECLARE inside a module.
+// Keeping declarations behind a macro avoids root-scope declarations if this header is compiled alone.
+`define PREAMBLE_IQ_WIRE_DECLARE \
+localparam integer PREAMBLE_SYMBOL_NUM = 192; \
+localparam integer PREAMBLE_IQ_W       = 16; \
+wire [PREAMBLE_IQ_W-1:0] PREAMBLE_I [0:PREAMBLE_SYMBOL_NUM-1]; \
+wire [PREAMBLE_IQ_W-1:0] PREAMBLE_Q [0:PREAMBLE_SYMBOL_NUM-1]; \
+assign PREAMBLE_I[  0] = 16'sd23170; assign PREAMBLE_Q[  0] = -16'sd23170; \
+assign PREAMBLE_I[  1] = 16'sd32767; assign PREAMBLE_Q[  1] = 16'sd0; \
+assign PREAMBLE_I[  2] = -16'sd23170; assign PREAMBLE_Q[  2] = 16'sd23170; \
+assign PREAMBLE_I[  3] = -16'sd32767; assign PREAMBLE_Q[  3] = 16'sd0; \
+assign PREAMBLE_I[  4] = 16'sd23170; assign PREAMBLE_Q[  4] = 16'sd23170; \
+assign PREAMBLE_I[  5] = 16'sd23170; assign PREAMBLE_Q[  5] = 16'sd23170; \
+assign PREAMBLE_I[  6] = 16'sd23170; assign PREAMBLE_Q[  6] = 16'sd23170; \
+assign PREAMBLE_I[  7] = 16'sd32767; assign PREAMBLE_Q[  7] = 16'sd0; \
+assign PREAMBLE_I[  8] = 16'sd0; assign PREAMBLE_Q[  8] = 16'sd32767; \
+assign PREAMBLE_I[  9] = 16'sd0; assign PREAMBLE_Q[  9] = -16'sd32767; \
+assign PREAMBLE_I[ 10] = 16'sd23170; assign PREAMBLE_Q[ 10] = 16'sd23170; \
+assign PREAMBLE_I[ 11] = -16'sd23170; assign PREAMBLE_Q[ 11] = -16'sd23170; \
+assign PREAMBLE_I[ 12] = 16'sd23170; assign PREAMBLE_Q[ 12] = 16'sd23170; \
+assign PREAMBLE_I[ 13] = 16'sd23170; assign PREAMBLE_Q[ 13] = -16'sd23170; \
+assign PREAMBLE_I[ 14] = 16'sd32767; assign PREAMBLE_Q[ 14] = 16'sd0; \
+assign PREAMBLE_I[ 15] = -16'sd23170; assign PREAMBLE_Q[ 15] = 16'sd23170; \
+assign PREAMBLE_I[ 16] = -16'sd23170; assign PREAMBLE_Q[ 16] = -16'sd23170; \
+assign PREAMBLE_I[ 17] = -16'sd32767; assign PREAMBLE_Q[ 17] = 16'sd0; \
+assign PREAMBLE_I[ 18] = 16'sd0; assign PREAMBLE_Q[ 18] = 16'sd32767; \
+assign PREAMBLE_I[ 19] = 16'sd0; assign PREAMBLE_Q[ 19] = 16'sd32767; \
+assign PREAMBLE_I[ 20] = 16'sd0; assign PREAMBLE_Q[ 20] = -16'sd32767; \
+assign PREAMBLE_I[ 21] = 16'sd23170; assign PREAMBLE_Q[ 21] = 16'sd23170; \
+assign PREAMBLE_I[ 22] = 16'sd0; assign PREAMBLE_Q[ 22] = 16'sd32767; \
+assign PREAMBLE_I[ 23] = 16'sd0; assign PREAMBLE_Q[ 23] = 16'sd32767; \
+assign PREAMBLE_I[ 24] = 16'sd32767; assign PREAMBLE_Q[ 24] = 16'sd0; \
+assign PREAMBLE_I[ 25] = -16'sd32767; assign PREAMBLE_Q[ 25] = 16'sd0; \
+assign PREAMBLE_I[ 26] = -16'sd23170; assign PREAMBLE_Q[ 26] = -16'sd23170; \
+assign PREAMBLE_I[ 27] = -16'sd32767; assign PREAMBLE_Q[ 27] = 16'sd0; \
+assign PREAMBLE_I[ 28] = 16'sd23170; assign PREAMBLE_Q[ 28] = 16'sd23170; \
+assign PREAMBLE_I[ 29] = 16'sd0; assign PREAMBLE_Q[ 29] = 16'sd32767; \
+assign PREAMBLE_I[ 30] = 16'sd0; assign PREAMBLE_Q[ 30] = 16'sd32767; \
+assign PREAMBLE_I[ 31] = 16'sd0; assign PREAMBLE_Q[ 31] = -16'sd32767; \
+assign PREAMBLE_I[ 32] = 16'sd23170; assign PREAMBLE_Q[ 32] = -16'sd23170; \
+assign PREAMBLE_I[ 33] = 16'sd32767; assign PREAMBLE_Q[ 33] = 16'sd0; \
+assign PREAMBLE_I[ 34] = 16'sd23170; assign PREAMBLE_Q[ 34] = -16'sd23170; \
+assign PREAMBLE_I[ 35] = 16'sd32767; assign PREAMBLE_Q[ 35] = 16'sd0; \
+assign PREAMBLE_I[ 36] = 16'sd23170; assign PREAMBLE_Q[ 36] = 16'sd23170; \
+assign PREAMBLE_I[ 37] = 16'sd23170; assign PREAMBLE_Q[ 37] = 16'sd23170; \
+assign PREAMBLE_I[ 38] = -16'sd23170; assign PREAMBLE_Q[ 38] = -16'sd23170; \
+assign PREAMBLE_I[ 39] = -16'sd32767; assign PREAMBLE_Q[ 39] = 16'sd0; \
+assign PREAMBLE_I[ 40] = 16'sd0; assign PREAMBLE_Q[ 40] = 16'sd32767; \
+assign PREAMBLE_I[ 41] = 16'sd0; assign PREAMBLE_Q[ 41] = -16'sd32767; \
+assign PREAMBLE_I[ 42] = -16'sd23170; assign PREAMBLE_Q[ 42] = -16'sd23170; \
+assign PREAMBLE_I[ 43] = 16'sd23170; assign PREAMBLE_Q[ 43] = 16'sd23170; \
+assign PREAMBLE_I[ 44] = 16'sd23170; assign PREAMBLE_Q[ 44] = 16'sd23170; \
+assign PREAMBLE_I[ 45] = 16'sd23170; assign PREAMBLE_Q[ 45] = -16'sd23170; \
+assign PREAMBLE_I[ 46] = -16'sd32767; assign PREAMBLE_Q[ 46] = 16'sd0; \
+assign PREAMBLE_I[ 47] = 16'sd23170; assign PREAMBLE_Q[ 47] = -16'sd23170; \
+assign PREAMBLE_I[ 48] = -16'sd23170; assign PREAMBLE_Q[ 48] = -16'sd23170; \
+assign PREAMBLE_I[ 49] = -16'sd32767; assign PREAMBLE_Q[ 49] = 16'sd0; \
+assign PREAMBLE_I[ 50] = 16'sd0; assign PREAMBLE_Q[ 50] = -16'sd32767; \
+assign PREAMBLE_I[ 51] = 16'sd0; assign PREAMBLE_Q[ 51] = -16'sd32767; \
+assign PREAMBLE_I[ 52] = 16'sd0; assign PREAMBLE_Q[ 52] = -16'sd32767; \
+assign PREAMBLE_I[ 53] = 16'sd23170; assign PREAMBLE_Q[ 53] = 16'sd23170; \
+assign PREAMBLE_I[ 54] = 16'sd0; assign PREAMBLE_Q[ 54] = -16'sd32767; \
+assign PREAMBLE_I[ 55] = 16'sd0; assign PREAMBLE_Q[ 55] = -16'sd32767; \
+assign PREAMBLE_I[ 56] = 16'sd32767; assign PREAMBLE_Q[ 56] = 16'sd0; \
+assign PREAMBLE_I[ 57] = -16'sd32767; assign PREAMBLE_Q[ 57] = 16'sd0; \
+assign PREAMBLE_I[ 58] = 16'sd23170; assign PREAMBLE_Q[ 58] = 16'sd23170; \
+assign PREAMBLE_I[ 59] = 16'sd32767; assign PREAMBLE_Q[ 59] = 16'sd0; \
+assign PREAMBLE_I[ 60] = 16'sd23170; assign PREAMBLE_Q[ 60] = 16'sd23170; \
+assign PREAMBLE_I[ 61] = 16'sd0; assign PREAMBLE_Q[ 61] = 16'sd32767; \
+assign PREAMBLE_I[ 62] = 16'sd0; assign PREAMBLE_Q[ 62] = -16'sd32767; \
+assign PREAMBLE_I[ 63] = 16'sd0; assign PREAMBLE_Q[ 63] = 16'sd32767; \
+assign PREAMBLE_I[ 64] = 16'sd23170; assign PREAMBLE_Q[ 64] = -16'sd23170; \
+assign PREAMBLE_I[ 65] = -16'sd32767; assign PREAMBLE_Q[ 65] = 16'sd0; \
+assign PREAMBLE_I[ 66] = 16'sd23170; assign PREAMBLE_Q[ 66] = -16'sd23170; \
+assign PREAMBLE_I[ 67] = -16'sd32767; assign PREAMBLE_Q[ 67] = 16'sd0; \
+assign PREAMBLE_I[ 68] = 16'sd23170; assign PREAMBLE_Q[ 68] = 16'sd23170; \
+assign PREAMBLE_I[ 69] = -16'sd23170; assign PREAMBLE_Q[ 69] = -16'sd23170; \
+assign PREAMBLE_I[ 70] = -16'sd23170; assign PREAMBLE_Q[ 70] = -16'sd23170; \
+assign PREAMBLE_I[ 71] = 16'sd32767; assign PREAMBLE_Q[ 71] = 16'sd0; \
+assign PREAMBLE_I[ 72] = 16'sd0; assign PREAMBLE_Q[ 72] = 16'sd32767; \
+assign PREAMBLE_I[ 73] = 16'sd0; assign PREAMBLE_Q[ 73] = 16'sd32767; \
+assign PREAMBLE_I[ 74] = -16'sd23170; assign PREAMBLE_Q[ 74] = -16'sd23170; \
+assign PREAMBLE_I[ 75] = -16'sd23170; assign PREAMBLE_Q[ 75] = -16'sd23170; \
+assign PREAMBLE_I[ 76] = 16'sd23170; assign PREAMBLE_Q[ 76] = 16'sd23170; \
+assign PREAMBLE_I[ 77] = -16'sd23170; assign PREAMBLE_Q[ 77] = 16'sd23170; \
+assign PREAMBLE_I[ 78] = -16'sd32767; assign PREAMBLE_Q[ 78] = 16'sd0; \
+assign PREAMBLE_I[ 79] = -16'sd23170; assign PREAMBLE_Q[ 79] = 16'sd23170; \
+assign PREAMBLE_I[ 80] = -16'sd23170; assign PREAMBLE_Q[ 80] = -16'sd23170; \
+assign PREAMBLE_I[ 81] = 16'sd32767; assign PREAMBLE_Q[ 81] = 16'sd0; \
+assign PREAMBLE_I[ 82] = 16'sd0; assign PREAMBLE_Q[ 82] = -16'sd32767; \
+assign PREAMBLE_I[ 83] = 16'sd0; assign PREAMBLE_Q[ 83] = 16'sd32767; \
+assign PREAMBLE_I[ 84] = 16'sd0; assign PREAMBLE_Q[ 84] = -16'sd32767; \
+assign PREAMBLE_I[ 85] = -16'sd23170; assign PREAMBLE_Q[ 85] = -16'sd23170; \
+assign PREAMBLE_I[ 86] = 16'sd0; assign PREAMBLE_Q[ 86] = -16'sd32767; \
+assign PREAMBLE_I[ 87] = 16'sd0; assign PREAMBLE_Q[ 87] = 16'sd32767; \
+assign PREAMBLE_I[ 88] = 16'sd32767; assign PREAMBLE_Q[ 88] = 16'sd0; \
+assign PREAMBLE_I[ 89] = 16'sd32767; assign PREAMBLE_Q[ 89] = 16'sd0; \
+assign PREAMBLE_I[ 90] = 16'sd23170; assign PREAMBLE_Q[ 90] = 16'sd23170; \
+assign PREAMBLE_I[ 91] = -16'sd32767; assign PREAMBLE_Q[ 91] = 16'sd0; \
+assign PREAMBLE_I[ 92] = 16'sd23170; assign PREAMBLE_Q[ 92] = 16'sd23170; \
+assign PREAMBLE_I[ 93] = 16'sd0; assign PREAMBLE_Q[ 93] = -16'sd32767; \
+assign PREAMBLE_I[ 94] = 16'sd0; assign PREAMBLE_Q[ 94] = -16'sd32767; \
+assign PREAMBLE_I[ 95] = 16'sd0; assign PREAMBLE_Q[ 95] = -16'sd32767; \
+assign PREAMBLE_I[ 96] = 16'sd23170; assign PREAMBLE_Q[ 96] = -16'sd23170; \
+assign PREAMBLE_I[ 97] = 16'sd32767; assign PREAMBLE_Q[ 97] = 16'sd0; \
+assign PREAMBLE_I[ 98] = -16'sd23170; assign PREAMBLE_Q[ 98] = 16'sd23170; \
+assign PREAMBLE_I[ 99] = -16'sd32767; assign PREAMBLE_Q[ 99] = 16'sd0; \
+assign PREAMBLE_I[100] = -16'sd23170; assign PREAMBLE_Q[100] = -16'sd23170; \
+assign PREAMBLE_I[101] = -16'sd23170; assign PREAMBLE_Q[101] = -16'sd23170; \
+assign PREAMBLE_I[102] = -16'sd23170; assign PREAMBLE_Q[102] = -16'sd23170; \
+assign PREAMBLE_I[103] = -16'sd32767; assign PREAMBLE_Q[103] = 16'sd0; \
+assign PREAMBLE_I[104] = 16'sd0; assign PREAMBLE_Q[104] = 16'sd32767; \
+assign PREAMBLE_I[105] = 16'sd0; assign PREAMBLE_Q[105] = -16'sd32767; \
+assign PREAMBLE_I[106] = 16'sd23170; assign PREAMBLE_Q[106] = 16'sd23170; \
+assign PREAMBLE_I[107] = -16'sd23170; assign PREAMBLE_Q[107] = -16'sd23170; \
+assign PREAMBLE_I[108] = -16'sd23170; assign PREAMBLE_Q[108] = -16'sd23170; \
+assign PREAMBLE_I[109] = -16'sd23170; assign PREAMBLE_Q[109] = 16'sd23170; \
+assign PREAMBLE_I[110] = -16'sd32767; assign PREAMBLE_Q[110] = 16'sd0; \
+assign PREAMBLE_I[111] = 16'sd23170; assign PREAMBLE_Q[111] = -16'sd23170; \
+assign PREAMBLE_I[112] = -16'sd23170; assign PREAMBLE_Q[112] = -16'sd23170; \
+assign PREAMBLE_I[113] = -16'sd32767; assign PREAMBLE_Q[113] = 16'sd0; \
+assign PREAMBLE_I[114] = 16'sd0; assign PREAMBLE_Q[114] = 16'sd32767; \
+assign PREAMBLE_I[115] = 16'sd0; assign PREAMBLE_Q[115] = 16'sd32767; \
+assign PREAMBLE_I[116] = 16'sd0; assign PREAMBLE_Q[116] = 16'sd32767; \
+assign PREAMBLE_I[117] = -16'sd23170; assign PREAMBLE_Q[117] = -16'sd23170; \
+assign PREAMBLE_I[118] = 16'sd0; assign PREAMBLE_Q[118] = -16'sd32767; \
+assign PREAMBLE_I[119] = 16'sd0; assign PREAMBLE_Q[119] = -16'sd32767; \
+assign PREAMBLE_I[120] = 16'sd32767; assign PREAMBLE_Q[120] = 16'sd0; \
+assign PREAMBLE_I[121] = -16'sd32767; assign PREAMBLE_Q[121] = 16'sd0; \
+assign PREAMBLE_I[122] = -16'sd23170; assign PREAMBLE_Q[122] = -16'sd23170; \
+assign PREAMBLE_I[123] = -16'sd32767; assign PREAMBLE_Q[123] = 16'sd0; \
+assign PREAMBLE_I[124] = -16'sd23170; assign PREAMBLE_Q[124] = -16'sd23170; \
+assign PREAMBLE_I[125] = 16'sd0; assign PREAMBLE_Q[125] = -16'sd32767; \
+assign PREAMBLE_I[126] = 16'sd0; assign PREAMBLE_Q[126] = -16'sd32767; \
+assign PREAMBLE_I[127] = 16'sd0; assign PREAMBLE_Q[127] = 16'sd32767; \
+assign PREAMBLE_I[128] = 16'sd23170; assign PREAMBLE_Q[128] = -16'sd23170; \
+assign PREAMBLE_I[129] = -16'sd32767; assign PREAMBLE_Q[129] = 16'sd0; \
+assign PREAMBLE_I[130] = -16'sd23170; assign PREAMBLE_Q[130] = 16'sd23170; \
+assign PREAMBLE_I[131] = 16'sd32767; assign PREAMBLE_Q[131] = 16'sd0; \
+assign PREAMBLE_I[132] = 16'sd23170; assign PREAMBLE_Q[132] = 16'sd23170; \
+assign PREAMBLE_I[133] = -16'sd23170; assign PREAMBLE_Q[133] = -16'sd23170; \
+assign PREAMBLE_I[134] = 16'sd23170; assign PREAMBLE_Q[134] = 16'sd23170; \
+assign PREAMBLE_I[135] = -16'sd32767; assign PREAMBLE_Q[135] = 16'sd0; \
+assign PREAMBLE_I[136] = 16'sd0; assign PREAMBLE_Q[136] = 16'sd32767; \
+assign PREAMBLE_I[137] = 16'sd0; assign PREAMBLE_Q[137] = 16'sd32767; \
+assign PREAMBLE_I[138] = 16'sd23170; assign PREAMBLE_Q[138] = 16'sd23170; \
+assign PREAMBLE_I[139] = 16'sd23170; assign PREAMBLE_Q[139] = 16'sd23170; \
+assign PREAMBLE_I[140] = 16'sd23170; assign PREAMBLE_Q[140] = 16'sd23170; \
+assign PREAMBLE_I[141] = -16'sd23170; assign PREAMBLE_Q[141] = 16'sd23170; \
+assign PREAMBLE_I[142] = 16'sd32767; assign PREAMBLE_Q[142] = 16'sd0; \
+assign PREAMBLE_I[143] = 16'sd23170; assign PREAMBLE_Q[143] = -16'sd23170; \
+assign PREAMBLE_I[144] = -16'sd23170; assign PREAMBLE_Q[144] = -16'sd23170; \
+assign PREAMBLE_I[145] = 16'sd32767; assign PREAMBLE_Q[145] = 16'sd0; \
+assign PREAMBLE_I[146] = 16'sd0; assign PREAMBLE_Q[146] = 16'sd32767; \
+assign PREAMBLE_I[147] = 16'sd0; assign PREAMBLE_Q[147] = -16'sd32767; \
+assign PREAMBLE_I[148] = 16'sd0; assign PREAMBLE_Q[148] = -16'sd32767; \
+assign PREAMBLE_I[149] = -16'sd23170; assign PREAMBLE_Q[149] = -16'sd23170; \
+assign PREAMBLE_I[150] = 16'sd0; assign PREAMBLE_Q[150] = 16'sd32767; \
+assign PREAMBLE_I[151] = 16'sd0; assign PREAMBLE_Q[151] = -16'sd32767; \
+assign PREAMBLE_I[152] = 16'sd32767; assign PREAMBLE_Q[152] = 16'sd0; \
+assign PREAMBLE_I[153] = 16'sd32767; assign PREAMBLE_Q[153] = 16'sd0; \
+assign PREAMBLE_I[154] = -16'sd23170; assign PREAMBLE_Q[154] = -16'sd23170; \
+assign PREAMBLE_I[155] = 16'sd32767; assign PREAMBLE_Q[155] = 16'sd0; \
+assign PREAMBLE_I[156] = 16'sd23170; assign PREAMBLE_Q[156] = 16'sd23170; \
+assign PREAMBLE_I[157] = 16'sd0; assign PREAMBLE_Q[157] = -16'sd32767; \
+assign PREAMBLE_I[158] = 16'sd0; assign PREAMBLE_Q[158] = 16'sd32767; \
+assign PREAMBLE_I[159] = 16'sd0; assign PREAMBLE_Q[159] = 16'sd32767; \
+assign PREAMBLE_I[160] = 16'sd23170; assign PREAMBLE_Q[160] = -16'sd23170; \
+assign PREAMBLE_I[161] = -16'sd32767; assign PREAMBLE_Q[161] = 16'sd0; \
+assign PREAMBLE_I[162] = -16'sd23170; assign PREAMBLE_Q[162] = 16'sd23170; \
+assign PREAMBLE_I[163] = 16'sd32767; assign PREAMBLE_Q[163] = 16'sd0; \
+assign PREAMBLE_I[164] = -16'sd23170; assign PREAMBLE_Q[164] = -16'sd23170; \
+assign PREAMBLE_I[165] = 16'sd23170; assign PREAMBLE_Q[165] = 16'sd23170; \
+assign PREAMBLE_I[166] = -16'sd23170; assign PREAMBLE_Q[166] = -16'sd23170; \
+assign PREAMBLE_I[167] = 16'sd32767; assign PREAMBLE_Q[167] = 16'sd0; \
+assign PREAMBLE_I[168] = 16'sd0; assign PREAMBLE_Q[168] = 16'sd32767; \
+assign PREAMBLE_I[169] = 16'sd0; assign PREAMBLE_Q[169] = 16'sd32767; \
+assign PREAMBLE_I[170] = 16'sd23170; assign PREAMBLE_Q[170] = 16'sd23170; \
+assign PREAMBLE_I[171] = 16'sd23170; assign PREAMBLE_Q[171] = 16'sd23170; \
+assign PREAMBLE_I[172] = -16'sd23170; assign PREAMBLE_Q[172] = -16'sd23170; \
+assign PREAMBLE_I[173] = 16'sd23170; assign PREAMBLE_Q[173] = -16'sd23170; \
+assign PREAMBLE_I[174] = -16'sd32767; assign PREAMBLE_Q[174] = 16'sd0; \
+assign PREAMBLE_I[175] = -16'sd23170; assign PREAMBLE_Q[175] = 16'sd23170; \
+assign PREAMBLE_I[176] = -16'sd23170; assign PREAMBLE_Q[176] = -16'sd23170; \
+assign PREAMBLE_I[177] = 16'sd32767; assign PREAMBLE_Q[177] = 16'sd0; \
+assign PREAMBLE_I[178] = 16'sd0; assign PREAMBLE_Q[178] = 16'sd32767; \
+assign PREAMBLE_I[179] = 16'sd0; assign PREAMBLE_Q[179] = -16'sd32767; \
+assign PREAMBLE_I[180] = 16'sd0; assign PREAMBLE_Q[180] = 16'sd32767; \
+assign PREAMBLE_I[181] = 16'sd23170; assign PREAMBLE_Q[181] = 16'sd23170; \
+assign PREAMBLE_I[182] = 16'sd0; assign PREAMBLE_Q[182] = -16'sd32767; \
+assign PREAMBLE_I[183] = 16'sd0; assign PREAMBLE_Q[183] = 16'sd32767; \
+assign PREAMBLE_I[184] = 16'sd32767; assign PREAMBLE_Q[184] = 16'sd0; \
+assign PREAMBLE_I[185] = 16'sd32767; assign PREAMBLE_Q[185] = 16'sd0; \
+assign PREAMBLE_I[186] = -16'sd23170; assign PREAMBLE_Q[186] = -16'sd23170; \
+assign PREAMBLE_I[187] = 16'sd32767; assign PREAMBLE_Q[187] = 16'sd0; \
+assign PREAMBLE_I[188] = -16'sd23170; assign PREAMBLE_Q[188] = -16'sd23170; \
+assign PREAMBLE_I[189] = 16'sd0; assign PREAMBLE_Q[189] = 16'sd32767; \
+assign PREAMBLE_I[190] = 16'sd0; assign PREAMBLE_Q[190] = -16'sd32767; \
+assign PREAMBLE_I[191] = 16'sd0; assign PREAMBLE_Q[191] = -16'sd32767;
+
+`endif
